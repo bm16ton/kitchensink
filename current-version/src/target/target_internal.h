@@ -1,0 +1,194 @@
+/*
+ * This file is part of the Black Magic Debug project.
+ *
+ * Copyright (C) 2011  Black Sphere Technologies Ltd.
+ * Written by Gareth McMullin <gareth@blacksphere.co.nz>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#ifndef __TARGET_INTERNAL_H
+#define __TARGET_INTERNAL_H
+
+#include "platform_support.h"
+
+extern target *target_list;
+target *target_new(void);
+
+struct target_ram {
+	target_addr start;
+	size_t length;
+	struct target_ram *next;
+};
+
+typedef struct target_flash target_flash_s;
+
+typedef int (*flash_erase_func)(target_flash_s *f, target_addr addr, size_t len);
+typedef int (*flash_write_func)(target_flash_s *f, target_addr dest,
+                                const void *src, size_t len);
+typedef int (*flash_done_func)(target_flash_s *f);
+
+struct target_flash {
+	target_addr start;
+	size_t length;
+	size_t blocksize;
+	flash_erase_func erase;
+	flash_write_func write;
+	flash_done_func done;
+	target *t;
+	uint8_t erased;
+	size_t buf_size;
+	struct target_flash *next;
+	target_addr buf_addr;
+	void *buf;
+};
+
+typedef bool (*cmd_handler)(target *t, int argc, const char **argv);
+
+typedef struct command_s {
+	const char *cmd;
+	cmd_handler handler;
+	const char *help;
+} command_t;
+
+struct target_command_s {
+	const char *specific_name;
+	const struct command_s *cmds;
+	struct target_command_s *next;
+};
+
+struct breakwatch {
+	struct breakwatch *next;
+	enum target_breakwatch type;
+	target_addr addr;
+	size_t size;
+	uint32_t reserved[4]; /* for use by the implementing driver */
+};
+
+#define MAX_CMDLINE 81
+
+struct target_s {
+	bool attached;
+	struct target_controller *tc;
+
+	/* Attach/Detach funcitons */
+	bool (*attach)(target *t);
+	void (*detach)(target *t);
+	bool (*check_error)(target *t);
+
+	/* Memory access functions */
+	void (*mem_read)(target *t, void *dest, target_addr src,
+	                 size_t len);
+	void (*mem_write)(target *t, target_addr dest,
+	                  const void *src, size_t len);
+
+	/* Register access functions */
+	size_t regs_size;
+	const char *tdesc;
+	void (*regs_read)(target *t, void *data);
+	void (*regs_write)(target *t, const void *data);
+	ssize_t (*reg_read)(target *t, int reg, void *data, size_t max);
+	ssize_t (*reg_write)(target *t, int reg, const void *data, size_t size);
+
+	/* Halt/resume functions */
+	void (*reset)(target *t);
+	void (*extended_reset)(target *t);
+	void (*halt_request)(target *t);
+	enum target_halt_reason (*halt_poll)(target *t, target_addr *watch);
+	void (*halt_resume)(target *t, bool step);
+
+	/* Break-/watchpoint functions */
+	int (*breakwatch_set)(target *t, struct breakwatch*);
+	int (*breakwatch_clear)(target *t, struct breakwatch*);
+	struct breakwatch *bw_list;
+
+	/* Recovery functions */
+	bool (*mass_erase)(target *t);
+
+	/* target-defined options */
+	unsigned target_options;
+
+	void *target_storage;
+	union {
+		bool unsafe_enabled;
+		bool ke04_mode;
+	};
+
+	struct target_ram *ram;
+	struct target_flash *flash;
+
+	/* Other stuff */
+	const char *driver;
+	uint32_t cpuid;
+	char *core;
+	char cmdline[MAX_CMDLINE];
+	target_addr heapinfo[4];
+	struct target_command_s *commands;
+#ifdef PLATFORM_HAS_USBUART
+	bool stdout_redirected;
+#endif
+
+	struct target_s *next;
+
+	void *priv;
+	void (*priv_free)(void *);
+
+	/* Target designer and id / partno */
+	uint16_t designer_code;
+	/* targetid partno if available (>= DPv2)
+	 * fallback to ap partno
+	 */
+	uint16_t part_id;
+};
+
+void target_print_progress(platform_timeout *timeout);
+void target_ram_map_free(target *t);
+void target_flash_map_free(target *t);
+void target_mem_map_free(target *t);
+void target_add_commands(target *t, const struct command_s *cmds, const char *name);
+void target_add_ram(target *t, target_addr start, uint32_t len);
+void target_add_flash(target *t, struct target_flash *f);
+
+struct target_flash *target_flash_for_addr(target *t, uint32_t addr);
+
+/* Convenience function for MMIO access */
+uint32_t target_mem_read32(target *t, uint32_t addr);
+uint16_t target_mem_read16(target *t, uint32_t addr);
+uint8_t target_mem_read8(target *t, uint32_t addr);
+void target_mem_write32(target *t, uint32_t addr, uint32_t value);
+void target_mem_write16(target *t, uint32_t addr, uint16_t value);
+void target_mem_write8(target *t, uint32_t addr, uint8_t value);
+bool target_check_error(target *t);
+
+/* Access to host controller interface */
+void tc_printf(target *t, const char *fmt, ...);
+
+/* Interface to host system calls */
+int tc_open(target *, target_addr path, size_t plen,
+            enum target_open_flags flags, mode_t mode);
+int tc_close(target *t, int fd);
+int tc_read(target *t, int fd, target_addr buf, unsigned int count);
+int tc_write(target *t, int fd, target_addr buf, unsigned int count);
+long tc_lseek(target *t, int fd, long offset,
+              enum target_seek_flag flag);
+int tc_rename(target *t, target_addr oldpath, size_t oldlen,
+                         target_addr newpath, size_t newlen);
+int tc_unlink(target *t, target_addr path, size_t plen);
+int tc_stat(target *t, target_addr path, size_t plen, target_addr buf);
+int tc_fstat(target *t, int fd, target_addr buf);
+int tc_gettimeofday(target *t, target_addr tv, target_addr tz);
+int tc_isatty(target *t, int fd);
+int tc_system(target *t, target_addr cmd, size_t cmdlen);
+
+#endif

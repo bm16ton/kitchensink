@@ -1,0 +1,22 @@
+From 48053a89b74b78610221233befebf698544b5cbf Mon Sep 17 00:00:00 2001
+From: Fabio Pugliese Ornellas <fabio.ornellas@gmail.com>
+Date: Tue, 31 Dec 2019 16:10:52 +0000
+Subject: [PATCH] Fix garbage config returned for wrong index
+
+---
+ lib/usb/usb_standard.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/lib/usb/usb_standard.c b/lib/usb/usb_standard.c
+index 7057f2dedf..cab42ac90d 100644
+--- a/lib/usb/usb_standard.c
++++ b/lib/usb/usb_standard.c
+@@ -165,6 +165,8 @@ usb_standard_get_descriptor(usbd_device *usbd_dev,
+ 		*len = MIN(*len, usbd_dev->desc->bLength);
+ 		return USBD_REQ_HANDLED;
+ 	case USB_DT_CONFIGURATION:
++		if(descr_idx >= usbd_dev->desc->bNumConfigurations)
++			return USBD_REQ_NOTSUPP;
+ 		*buf = usbd_dev->ctrl_buf;
+ 		*len = build_config_descriptor(usbd_dev, descr_idx, *buf, *len);
+ 		return USBD_REQ_HANDLED;

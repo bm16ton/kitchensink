@@ -1,0 +1,156 @@
+From aeeff7cec92bcd5f27a285208576725ae6bf6afd Mon Sep 17 00:00:00 2001
+From: Przemek Recha <przemek.recha@gmail.com>
+Date: Sun, 17 Apr 2022 01:18:36 +0200
+Subject: [PATCH] Add STM32 USART interrupts functions
+
+---
+ .../stm32/common/usart_common_all.h           |  6 ++
+ lib/stm32/common/usart_common_all.c           | 60 +++++++++++++++++++
+ lib/stm32/common/usart_common_v2.c            | 12 ++++
+ 3 files changed, 78 insertions(+)
+
+diff --git a/include/libopencm3/stm32/common/usart_common_all.h b/include/libopencm3/stm32/common/usart_common_all.h
+index 8c310a9c16..da47a4b499 100644
+--- a/include/libopencm3/stm32/common/usart_common_all.h
++++ b/include/libopencm3/stm32/common/usart_common_all.h
+@@ -118,14 +118,20 @@ void usart_enable_tx_dma(uint32_t usart);
+ void usart_disable_tx_dma(uint32_t usart);
+ void usart_enable_rx_interrupt(uint32_t usart);
+ void usart_disable_rx_interrupt(uint32_t usart);
++bool usart_rx_interrupt_enabled(uint32_t usart);
+ void usart_enable_tx_interrupt(uint32_t usart);
+ void usart_disable_tx_interrupt(uint32_t usart);
++bool usart_tx_interrupt_enabled(uint32_t usart);
+ void usart_enable_tx_complete_interrupt(uint32_t usart);
+ void usart_disable_tx_complete_interrupt(uint32_t usart);
++bool usart_tx_complete_interrupt_enabled(uint32_t usart);
+ void usart_enable_idle_interrupt(uint32_t usart);
+ void usart_disable_idle_interrupt(uint32_t usart);
++bool usart_idle_interrupt_enabled(uint32_t usart);
+ void usart_enable_error_interrupt(uint32_t usart);
+ void usart_disable_error_interrupt(uint32_t usart);
++bool usart_error_interrupt_enabled(uint32_t usart);
++void usart_clear_interrupt_flag(uint32_t usart, uint32_t flag);
+ bool usart_get_flag(uint32_t usart, uint32_t flag);
+ 
+ END_DECLS
+diff --git a/lib/stm32/common/usart_common_all.c b/lib/stm32/common/usart_common_all.c
+index e30e2febf8..0d4e14c029 100644
+--- a/lib/stm32/common/usart_common_all.c
++++ b/lib/stm32/common/usart_common_all.c
+@@ -326,6 +326,18 @@ void usart_disable_rx_interrupt(uint32_t usart)
+ 	USART_CR1(usart) &= ~USART_CR1_RXNEIE;
+ }
+ 
++/*---------------------------------------------------------------------------*/
++/** @brief USART Receiver Interrupt Enabled.
++
++@param[in] usart unsigned 32 bit. USART block register address base @ref
++        usart_reg_base
++* @returns boolean: interrupt enabled.
++*/
++
++bool usart_rx_interrupt_enabled(uint32_t usart) {
++    return ((USART_CR1(usart) & USART_CR1_RXNEIE) != 0);
++}
++
+ /*---------------------------------------------------------------------------*/
+ /** @brief USART Transmitter Interrupt Enable.
+ 
+@@ -350,6 +362,18 @@ void usart_disable_tx_interrupt(uint32_t usart)
+ 	USART_CR1(usart) &= ~USART_CR1_TXEIE;
+ }
+ 
++/*---------------------------------------------------------------------------*/
++/** @brief USART Transmitter Interrupt Enabled.
++
++@param[in] usart unsigned 32 bit. USART block register address base @ref
++        usart_reg_base
++* @returns boolean: interrupt enabled.
++*/
++
++bool usart_tx_interrupt_enabled(uint32_t usart) {
++  return ((USART_CR1(usart) & USART_CR1_TXEIE) != 0);
++}
++
+ /*---------------------------------------------------------------------------*/
+ /**
+  * @brief USART Transmission Complete Interrupt Enable
+@@ -376,6 +400,18 @@ void usart_disable_tx_complete_interrupt(uint32_t usart)
+ 	USART_CR1(usart) &= ~USART_CR1_TCIE;
+ }
+ 
++/*---------------------------------------------------------------------------*/
++/** @brief USART Transmission Complete Interrupt Enabled.
++
++@param[in] usart unsigned 32 bit. USART block register address base @ref
++        usart_reg_base
++* @returns boolean: interrupt enabled.
++*/
++
++bool usart_tx_complete_interrupt_enabled(uint32_t usart) {
++  return ((USART_CR1(usart) & USART_CR1_TCIE) != 0);
++}
++
+ /** @brief USART Idle Interrupt Enable.
+ 
+ @param[in] usart unsigned 32 bit. USART block register address base @ref
+@@ -399,6 +435,18 @@ void usart_disable_idle_interrupt(uint32_t usart)
+ 	USART_CR1(usart) &= ~USART_CR1_IDLEIE;
+ }
+ 
++/*---------------------------------------------------------------------------*/
++/** @brief USART Idle Interrupt Enabled.
++
++@param[in] usart unsigned 32 bit. USART block register address base @ref
++        usart_reg_base
++* @returns boolean: interrupt enabled.
++*/
++
++bool usart_idle_interrupt_enabled(uint32_t usart) {
++  return ((USART_CR1(usart) & USART_CR1_IDLEIE) != 0);
++}
++
+ /*---------------------------------------------------------------------------*/
+ /** @brief USART Error Interrupt Enable.
+ 
+@@ -423,5 +471,17 @@ void usart_disable_error_interrupt(uint32_t usart)
+ 	USART_CR3(usart) &= ~USART_CR3_EIE;
+ }
+ 
++/*---------------------------------------------------------------------------*/
++/** @brief USART Error Interrupt Enabled.
++
++@param[in] usart unsigned 32 bit. USART block register address base @ref
++        usart_reg_base
++* @returns boolean: interrupt enabled.
++*/
++
++bool usart_error_interrupt_enabled(uint32_t usart) {
++  return ((USART_CR3(usart) & USART_CR3_EIE) != 0);
++}
++
+ /**@}*/
+ 
+diff --git a/lib/stm32/common/usart_common_v2.c b/lib/stm32/common/usart_common_v2.c
+index f0811a4195..6c92f03cf4 100644
+--- a/lib/stm32/common/usart_common_v2.c
++++ b/lib/stm32/common/usart_common_v2.c
+@@ -302,5 +302,17 @@ bool usart_get_flag(uint32_t usart, uint32_t flag)
+ 	return ((USART_ISR(usart) & flag) != 0);
+ }
+ 
++/*---------------------------------------------------------------------------*/
++/** @brief USART Interrupt Flag clear
++ *
++ * @param[in] usart unsigned 32 bit. USART block register address base @ref
++ * usart_reg_base
++ * @param flag unsigned 32 bit. Interrupt clear flag @ref usart_isr_values
++ */
++
++void usart_clear_interrupt_flag(uint32_t usart, uint32_t flag) {
++  USART_ICR(usart) |= flag;
++}
++
+ 
+ /**@}*/
