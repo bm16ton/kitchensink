@@ -1,0 +1,37 @@
+
+set endpoint valid 
+
+        // set endpoint from VALID to NAK
+        usbd_ep_nak_set(usbd_dev, EP_DATA_OUT, 1);
+        
+        nak to valid
+          usbd_ep_nak_set(usb_device, EP_DATA_OUT, 0);
+          
+        reset
+        usbd_ep_reset
+        
+	/* Do core soft reset. */
+	OTG_FS_GRSTCTL |= OTG_GRSTCTL_CSRST;
+	while (OTG_FS_GRSTCTL & OTG_GRSTCTL_CSRST);
+
+
+	/* Flush all tx/rx fifos */
+	REBASE(OTG_GRSTCTL) = OTG_GRSTCTL_TXFFLSH | OTG_GRSTCTL_TXFNUM_ALL
+			      | OTG_GRSTCTL_RXFFLSH;
+			      
+			  
+static void dwc_flush_txfifo(usbd_device *usbd_dev, int ep)
+
+
+ep_reset
+
+void gdb_usb_out_cb(usbd_device *dev, uint8_t ep)
+{
+	(void)ep;
+	usbd_ep_nak_set(dev, CDCACM_GDB_ENDPOINT, 1);
+	count_new = usbd_ep_read_packet(dev, CDCACM_GDB_ENDPOINT,
+	                                double_buffer_out, CDCACM_PACKET_SIZE);
+	if(!count_new) {
+		usbd_ep_nak_set(dev, CDCACM_GDB_ENDPOINT, 0);
+	}
+}

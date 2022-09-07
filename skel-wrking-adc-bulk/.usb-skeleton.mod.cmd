@@ -1,0 +1,1 @@
+cmd_/home/maddocks/USB-GPIO/hybrid-usb/skel-wrking-adc-bulk/usb-skeleton.mod := { echo  /home/maddocks/USB-GPIO/hybrid-usb/skel-wrking-adc-bulk/usb-skeleton.o;  echo; } > /home/maddocks/USB-GPIO/hybrid-usb/skel-wrking-adc-bulk/usb-skeleton.mod

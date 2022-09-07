@@ -1,0 +1,50 @@
+[Target]
+entrypoint=main
+cmsis-svd=
+[Flash]
+tpwr=0
+connect_srst=0
+auto-download=0
+[SWO trace]
+mode=0
+bitrate=100000
+clock=48000000
+datasize=8
+enabled=0
+ctf=
+chan0="0 #000000 0"
+chan1="0 #000000 1"
+chan2="0 #000000 2"
+chan3="0 #000000 3"
+chan4="0 #000000 4"
+chan5="0 #000000 5"
+chan6="0 #000000 6"
+chan7="0 #000000 7"
+chan8="0 #000000 8"
+chan9="0 #000000 9"
+chan10="0 #000000 10"
+chan11="0 #000000 11"
+chan12="0 #000000 12"
+chan13="0 #000000 13"
+chan14="0 #000000 14"
+chan15="0 #000000 15"
+chan16="0 #000000 16"
+chan17="0 #000000 17"
+chan18="0 #000000 18"
+chan19="0 #000000 19"
+chan20="0 #000000 20"
+chan21="0 #000000 21"
+chan22="0 #000000 22"
+chan23="0 #000000 23"
+chan24="0 #000000 24"
+chan25="0 #000000 25"
+chan26="0 #000000 26"
+chan27="0 #000000 27"
+chan28="0 #000000 28"
+chan29="0 #000000 29"
+chan30="0 #000000 30"
+chan31="0 #000000 31"
+[Serial monitor]
+mode=0
+port=
+baud=0

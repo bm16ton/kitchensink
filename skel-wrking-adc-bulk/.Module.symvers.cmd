@@ -1,0 +1,1 @@
+cmd_/home/maddocks/USB-GPIO/hybrid-usb/skel-wrking-adc-bulk/Module.symvers := sed 's/\.ko$$/\.o/' /home/maddocks/USB-GPIO/hybrid-usb/skel-wrking-adc-bulk/modules.order | scripts/mod/modpost -m    -o /home/maddocks/USB-GPIO/hybrid-usb/skel-wrking-adc-bulk/Module.symvers -e -i Module.symvers  -N -T -
