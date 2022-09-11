@@ -30,6 +30,8 @@
 
 #include <setjmp.h>
 
+
+
 #define PLATFORM_HAS_TRACESWO
 #define PLATFORM_IDENT "(BlackPillV2) "
 /* Important pin mappings for STM32 implementation:
@@ -54,10 +56,10 @@
 #define TMS_PORT JTAG_PORT
 #define TCK_PORT JTAG_PORT
 #define TDO_PORT GPIOB
-#define TDI_PIN GPIO1
+#define TDI_PIN GPIO7
 #define TMS_PIN GPIO13
 #define TCK_PIN GPIO14
-#define TDO_PIN GPIO3
+#define TDO_PIN GPIO6
 
 #define SWDIO_PORT JTAG_PORT
 #define SWCLK_PORT JTAG_PORT
@@ -65,13 +67,16 @@
 #define SWCLK_PIN TCK_PIN
 
 #define TRST_PORT GPIOB
-#define TRST_PIN GPIO5
+#define TRST_PIN GPIO9
 #define NRST_PORT GPIOB
 #define NRST_PIN GPIO4
 
+/*
 #define PWR_BR_PORT GPIOB
 #define PWR_BR_PIN GPIO8
-
+*/
+#define I2CLED_PORT GPIOC
+#define LED_I2C GPIO13
 #define LED_PORT GPIOC
 #define LED_PORT_UART GPIOC
 #define LED_UART GPIO13
@@ -84,7 +89,7 @@
 #define USBUSART_DR USART1_DR
 #define USBUSART_IRQ NVIC_USART1_IRQ
 #define USBUSART_CLK RCC_USART1
-#define USBUSART_PORT GPIOB
+#define USBUSART_PORT GPIOA
 #define USBUSART_TX_PIN GPIO9
 #define USBUSART_RX_PIN GPIO10
 #define USBUSART_ISR(x) usart1_isr(x)

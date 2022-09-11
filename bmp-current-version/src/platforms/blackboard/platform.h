@@ -33,43 +33,40 @@
 
 
 #define PLATFORM_HAS_TRACESWO
-#define PLATFORM_IDENT "(BlackPillV2) "
+#define PLATFORM_IDENT "(BlackBoard) "
+
 /* Important pin mappings for STM32 implementation:
-        * JTAG/SWD
-                * PA1: TDI
-                * PA13: TMS/SWDIO
-                * PA14: TCK/SWCLK
-                * PB3: TDO/TRACESWO
-                * PB5: TRST
-                * PB4: nRST
-        * USB USART
-                * PB6: USART1 TX
-                * PB7: USART1 RX
-        * +3V3
-                * PB8 - turn on IRLML5103 transistor
-        * Force DFU mode button: PA0
+ *
+ * nTRST =    PC1
+ * nRST_OUT = PC8
+ * TDI =      PC2
+ * TMS =      PC4 (input for SWDP)
+ * TCK =      PC5/SWCLK
+ * TDO =      PC6 (input for TRACESWO
+ * nRST =     PC8
+ *
+ * Force DFU mode button: PA0
  */
-
 /* Hardware definitions... */
-#define JTAG_PORT GPIOA
-#define TDI_PORT JTAG_PORT
-#define TMS_PORT JTAG_PORT
-#define TCK_PORT JTAG_PORT
-#define TDO_PORT GPIOB
-#define TDI_PIN GPIO7
-#define TMS_PIN GPIO13
-#define TCK_PIN GPIO14
-#define TDO_PIN GPIO6
+#define JTAG_PORT 	GPIOC
+#define TDI_PORT	JTAG_PORT
+#define TMS_PORT	JTAG_PORT
+#define TCK_PORT	JTAG_PORT
+#define TDO_PORT	GPIOC
+#define TDI_PIN		GPIO2
+#define TMS_PIN		GPIO4
+#define TCK_PIN		GPIO5
+#define TDO_PIN		GPIO6
 
-#define SWDIO_PORT JTAG_PORT
-#define SWCLK_PORT JTAG_PORT
-#define SWDIO_PIN TMS_PIN
-#define SWCLK_PIN TCK_PIN
+#define SWDIO_PORT 	JTAG_PORT
+#define SWCLK_PORT 	JTAG_PORT
+#define SWDIO_PIN	TMS_PIN
+#define SWCLK_PIN	TCK_PIN
 
-#define TRST_PORT GPIOB
-#define TRST_PIN GPIO9
-#define NRST_PORT GPIOB
-#define NRST_PIN GPIO4
+#define TRST_PORT	GPIOC
+#define TRST_PIN	GPIO1
+#define NRST_PORT	GPIOC
+#define NRST_PIN	GPIO8
 
 /*
 #define PWR_BR_PORT GPIOB
@@ -77,13 +74,13 @@
 */
 #define I2CLED_PORT GPIOC
 #define LED_I2C GPIO13
-#define LED_PORT GPIOC
+#define LED_PORT GPIOA
 #define LED_PORT_UART GPIOC
 #define LED_UART GPIO13
-#define LED_IDLE_RUN GPIO15
-#define LED_ERROR GPIO14
+#define LED_IDLE_RUN GPIO6
+#define LED_ERROR GPIO7
 #define LED_BOOTLOADER GPIO13
-
+/*
 #define USBUSART USART1
 #define USBUSART_CR1 USART1_CR1
 #define USBUSART_DR USART1_DR
@@ -101,6 +98,26 @@
 #define USBUSART_DMA_RX_CHAN DMA_STREAM5
 #define USBUSART_DMA_RX_IRQ NVIC_DMA2_STREAM5_IRQ
 #define USBUSART_DMA_RX_ISR(x) dma2_stream5_isr(x)
+// For STM32F4 DMA trigger source must be specified 
+#define USBUSART_DMA_TRG DMA_SxCR_CHSEL_4
+*/
+#define USBUSART USART3
+#define USBUSART_CR1 USART3_CR1
+#define USBUSART_DR USART3_DR
+#define USBUSART_IRQ NVIC_USART3_IRQ
+#define USBUSART_CLK RCC_USART3
+#define USBUSART_PORT GPIOD
+#define USBUSART_TX_PIN GPIO8
+#define USBUSART_RX_PIN GPIO9
+#define USBUSART_ISR(x) usart3_isr(x)
+#define USBUSART_DMA_BUS DMA1
+#define USBUSART_DMA_CLK RCC_DMA1
+#define USBUSART_DMA_TX_CHAN DMA_STREAM3
+#define USBUSART_DMA_TX_IRQ NVIC_DMA1_STREAM3_IRQ
+#define USBUSART_DMA_TX_ISR(x) dma1_stream3_isr(x)
+#define USBUSART_DMA_RX_CHAN DMA_STREAM1
+#define USBUSART_DMA_RX_IRQ NVIC_DMA1_STREAM1_IRQ
+#define USBUSART_DMA_RX_ISR(x) dma1_stream1_isr(x)
 /* For STM32F4 DMA trigger source must be specified */
 #define USBUSART_DMA_TRG DMA_SxCR_CHSEL_4
 

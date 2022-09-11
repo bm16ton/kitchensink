@@ -59,17 +59,15 @@ int usbmode;
 void neopixel_init(void);
 void adc_init(void);
 // void u8log_Init(u8log_t *u8log, uint8_t width, uint8_t height, uint8_t *buf);
-static uint8_t u8x8_gpio_and_delay_cm3(u8x8_t *u8x8, uint8_t msg, uint8_t arg_int, void *arg_ptr);
-static uint8_t u8x8_byte_hw_i2c_cm3(u8x8_t *u8x8, uint8_t msg, uint8_t arg_int, void *arg_ptr);
+
 static void i2c_setup2(void);
-void ulib8run(void);
-void ulib8run2(void);
+
 static char ret2[] = "0.0V";
 int adcrun = 0;
 jmp_buf fatal_error_jmpbuf;
 extern char _ebss[];
 uint8_t usbd_control_buffer[256];
-u8x8_t u8x8_i, *u8x8 = &u8x8_i;
+
 void clock_setup(void);
 /*
 static int usb_fibre(fibre_t *fibre)
@@ -247,51 +245,6 @@ void platform_nrst_set_val(bool assert) { (void)assert; }
 bool platform_nrst_get_val(void) { return false; }
 
 
-static uint8_t u8x8_gpio_and_delay_cm3(u8x8_t *u8x8, uint8_t msg, uint8_t arg_int, void *arg_ptr) {
-	switch(msg) {
-	case U8X8_MSG_GPIO_AND_DELAY_INIT:
-		i2c_setup2();  /* Init I2C communication */
-		break;
-
-	default:
-		u8x8_SetGPIOResult(u8x8, 1);
-		break;
-	}
-
-	return 1;
-}
-
-/* I2C hardware transfer based on u8x8_byte.c implementation */
-static uint8_t u8x8_byte_hw_i2c_cm3(u8x8_t *u8x8, uint8_t msg, uint8_t arg_int, void *arg_ptr) {
-	static uint8_t buffer[32];   /* u8g2/u8x8 will never send more than 32 bytes */
-	static uint8_t buf_idx;
-	uint8_t *data;
-
-	switch(msg) {
-	case U8X8_MSG_BYTE_SEND:
-		data = (uint8_t *)arg_ptr;
-		while(arg_int > 0) {
-			buffer[buf_idx++] = *data;
-			data++;
-			arg_int--;
-		}
-		break;
-	case U8X8_MSG_BYTE_INIT:
-		break;
-	case U8X8_MSG_BYTE_SET_DC:
-		break;
-	case U8X8_MSG_BYTE_START_TRANSFER:
-		buf_idx = 0;
-		break;
-	case U8X8_MSG_BYTE_END_TRANSFER:
-		i2c_transfer7(I2C2, 0x3C, buffer, buf_idx, NULL, 0);
-		break;
-	default:
-		return 0;
-	}
-	return 1;
-}
-
 static void i2c_setup2(void) {
   /* Set alternate functions for the SCL and SDA pins of I2C1. */
 	/* GPIO for I2C1 */
@@ -319,59 +272,6 @@ static void i2c_setup2(void) {
     __asm__("nop");
   }
 }  
-
-void ulib8run(void) {
-
-	u8x8_Setup(u8x8, u8x8_d_sh1106_128x64_noname, u8x8_cad_ssd13xx_fast_i2c, u8x8_byte_hw_i2c_cm3, u8x8_gpio_and_delay_cm3);
-    i2c_setup2();
-      for (uint32_t loop = 0; loop < 800000; ++loop) {
-    __asm__("nop");
-    }
-	u8x8_InitDisplay(u8x8);
-	u8x8_SetPowerSave(u8x8,0);
-	u8x8_SetFont(u8x8, u8x8_font_7x14B_1x2_f);
-//    u8x8_SetFont(u8x8, u8x8_font_open_iconic_embedded_2x2);
-	u8x8_ClearDisplay(u8x8);
-	u8x8_DrawString(u8x8, 1,1, "16ton presents");
-//	u8x8_Draw2x2Glyph(u8x8, 0,0, 'H');
-	u8x8_SetInverseFont(u8x8, 1);
-	u8x8_DrawString(u8x8, 0,5, "BlackMagic");
-	u8x8_SetInverseFont(u8x8, 0);
-    u8x8_SetFont(u8x8, u8x8_font_7x14B_1x2_f); 
-//	u8x8_SetFont(u8x8, u8x8_font_open_iconic_embedded_2x2);
-//	u8x8_DrawGlyph(u8x8, 11,1, 65); /* Bell */
- //   u8x8_ClearDisplay(u8x8);
-}
-
-
-
-
-void ulib8run2(void) {
-
-	u8x8_Setup(u8x8, u8x8_d_sh1106_128x64_noname, u8x8_cad_ssd13xx_fast_i2c, u8x8_byte_hw_i2c_cm3, u8x8_gpio_and_delay_cm3);
-	delay_ms(15);
-    i2c_setup2();
-      for (uint32_t loop = 0; loop < 800000; ++loop) {
-    __asm__("nop");
-    }
-	u8x8_InitDisplay(u8x8); 
-
-	u8x8_SetPowerSave(u8x8,0);
-
-	u8x8_SetFont(u8x8, u8x8_font_7x14B_1x2_f);
-//    u8x8_SetFont(u8x8, u8x8_font_open_iconic_embedded_2x2);
-	u8x8_ClearDisplay(u8x8);
-	u8x8_DrawString(u8x8, 1,1, "16ton presents");
-//	u8x8_Draw2x2Glyph(u8x8, 0,0, 'H');
-	u8x8_SetInverseFont(u8x8, 1);
-	u8x8_DrawString(u8x8, 0,5, "USB ADC");
-	u8x8_SetInverseFont(u8x8, 0);
-    u8x8_SetFont(u8x8, u8x8_font_7x14B_1x2_f); 
-//	u8x8_SetFont(u8x8, u8x8_font_open_iconic_embedded_2x2);
-//	u8x8_DrawGlyph(u8x8, 11,1, 65); /* Bell */
-//    u8x8_ClearDisplay(u8x8);
-//    printBits(1, "poooop");
-}
 
 void adc_init(void)
 {
@@ -416,31 +316,6 @@ const char *platform_target_voltage(void)
 	return ret;
 }
 
-int yline = 1;
-static char banner1[] = " USB to ADC              ";
-static char banner2[] = " Blackmagic              ";
-
-void lcdshow(void) {
-//if (adcrun == 1) {
-//    u8x8_t u8x8_i, *u8x8 = &u8x8_i;
-//    u8x8_Setup(u8x8, u8x8_d_sh1106_128x64_noname, u8x8_cad_ssd13xx_fast_i2c, u8x8_byte_hw_i2c_cm3, u8x8_gpio_and_delay_cm3);
-//    u8x8_InitDisplay(u8x8);
-//	u8x8_SetPowerSave(u8x8,0);
-    yline = yline + 1;
-    if (yline == 16)
-         yline = 1;
-//	u8x8_SetFont(u8x8, u8x8_font_7x14B_1x2_f);
-    if (usbmode == 1) {
-    u8x8_ClearDisplay(u8x8);
-	u8x8_DrawString(u8x8, yline,3, banner1);
-    }
-
-    if (usbmode == 2) {   
-	u8x8_ClearDisplay(u8x8);
-	u8x8_DrawString(u8x8, yline,3, banner2);
-//	adcrun = 0;
-    }
-}
 
 void platform_request_boot(void)
 {
@@ -448,35 +323,5 @@ void platform_request_boot(void)
 	magic[0] = BOOTMAGIC0;
 	magic[1] = BOOTMAGIC1;
 	scb_reset_system();
-}
-
-void neopixel_init(void)
-{
- //   systime_setup(84000);
-//    systime_setup(84000);
-//	rcc_periph_clock_enable(RCC_GPIOB);
-	rcc_periph_clock_enable(RCC_SPI1);
-
-	gpio_mode_setup(GPIOB, GPIO_MODE_AF, GPIO_PUPD_PULLUP, GPIO5);
-	gpio_set_af(GPIOB, GPIO_AF5, GPIO5);
-
-	// use PIN B5 as ws2812 open drain output (1K pullup -> +5V)
-	gpio_set_output_options(GPIOB, GPIO_OTYPE_OD, GPIO_OSPEED_25MHZ, GPIO5);
-	ws2812_init(SPI1);
-    delay_ms(15);
-//	int h = 0;
-//	while (1) {
-//		h = (h+1) % 360;
-        if (usbmode == 1) {
-		    ws2812_write_rgb(SPI1, 220, 0, 220);
-		}
-		if (usbmode == 2) {
-		    ws2812_write_rgb(SPI1, 0, 220, 220);
-		}
-//		ws2812_write_hsv(SPI1, 120, 10, 1);
-//		ws2812_write_hsv(SPI1, 120, 10, 1);
-		delay_ms(15);
-//    }
-
 }
 

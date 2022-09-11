@@ -8,7 +8,7 @@ CFLAGS += -Istm32/include -mcpu=cortex-m4 -mthumb \
 	-DSTM32F4 -I../libopencm3/include \
 	-Iplatforms/stm32 
 
-LINKER_SCRIPT=platforms/stm32/blackpillv2.ld
+LINKER_SCRIPT=platforms/stm32/f4discovery.ld
 
 LDFLAGS_BOOT = -lopencm3_stm32f4 \
 	-Wl,-T,$(LINKER_SCRIPT) -nostartfiles -lc -lnosys \
@@ -16,14 +16,9 @@ LDFLAGS_BOOT = -lopencm3_stm32f4 \
 	-mfloat-abi=hard -mfpu=fpv4-sp-d16 \
 	-L../libopencm3/lib
 
-ifeq ($(BMP_BOOTLOADER), 1)
-$(info  Load address 0x08004000 for BMPBootloader)
-LDFLAGS = $(LDFLAGS_BOOT) -Wl,-Ttext=0x8004000
-CFLAGS += -DDFU_SERIAL_LENGTH=9
-else
 LDFLAGS += $(LDFLAGS_BOOT)
 CFLAGS += -DDFU_SERIAL_LENGTH=13
-endif
+
 
 CFLAGS += -DBLACKPILLV2
 CFLAGS += -DENABLE_NEOPIXEL

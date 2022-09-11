@@ -128,9 +128,9 @@ SOFTWARE.
 
 //#define ST_USE_SPI_DMA
 #define ST_HAS_RST
-//#define ST_HAS_CS
+#define ST_HAS_CS
 #ifdef ST_HAS_CS
-//	#define ST_RELEASE_WHEN_IDLE
+	#define ST_RELEASE_WHEN_IDLE
 #endif
 
 #define ST_SPI			SPI1
@@ -141,8 +141,8 @@ SOFTWARE.
 
 #define ST_PORT			GPIOA
 
-#define ST_RST			GPIO9
-#define ST_DC			GPIO3
+#define ST_RST			GPIO14
+#define ST_DC			GPIO9
 #define ST_SDA			GPIO7
 #define ST_SCL			GPIO5
 #define ST_BLK			GPIO3
@@ -150,13 +150,13 @@ SOFTWARE.
 #define ST_CS			GPIO4
 
 
-#define ST_DC_CMD			gpio_clear(GPIOA, GPIO3)
-#define ST_DC_DAT			gpio_set(GPIOA, GPIO3)
-#define ST_RST_ACTIVE		gpio_clear(GPIOE, GPIO9)
-#define ST_RST_IDLE			gpio_set(GPIOE, GPIO9)
+#define ST_DC_CMD			gpio_clear(GPIOE, GPIO9)
+#define ST_DC_DAT			gpio_set(GPIOE, GPIO9)
+#define ST_RST_ACTIVE		gpio_clear(GPIOE, GPIO12)
+#define ST_RST_IDLE			gpio_set(GPIOE, GPIO12)
 #ifdef ST_HAS_CS
-	#define ST_CS_ACTIVE		gpio_clear(GPIOA, GPIO4)
-	#define ST_CS_IDLE			gpio_set(GPIOA, GPIO4)
+	#define ST_CS_ACTIVE		gpio_clear(GPIOE, GPIO11)
+	#define ST_CS_IDLE			gpio_set(GPIOE, GPIO11)
 #endif
 
 #define ST_CONFIG_GPIO_CLOCK()	{ \
@@ -176,9 +176,12 @@ SOFTWARE.
 							GPIO9);   \
 	gpio_mode_setup(GPIOA, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO3);    \
 	gpio_set_output_options(GPIOA, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ,    \
-							GPIO3);                                     \
-	gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO4 | GPIO5 | GPIO7 | GPIO6); \
-	gpio_set_af(GPIOA, GPIO_AF5, GPIO4 |GPIO5 | GPIO7 | GPIO6);       \
+							GPIO3);      \
+		gpio_mode_setup(GPIOA, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO4);    \
+	gpio_set_output_options(GPIOA, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ,    \
+							GPIO4);                                 \
+	gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO5 | GPIO7 | GPIO6); \
+	gpio_set_af(GPIOA, GPIO_AF5, GPIO5 | GPIO7 | GPIO6);       \
 	gpio_set(GPIOF, GPIO14);                                       \
 	gpio_set(GPIOE, GPIO9);                                        \
 	}
@@ -210,7 +213,8 @@ SOFTWARE.
 // Note: If display shows wrong output, either change number of nops as said above,
 //		 or uncomment TXE and BSY flag checks and comment out all nops.
 #define ST_WRITE_8BIT(d)	do{ \
-							SPI_DR(ST_SPI) = (uint8_t)(d); \
+							/*SPI_DR(ST_SPI) = (uint8_t)(d);*/ \
+							spi_xfer(SPI1, d); \
 							/*while (!(SPI_SR(ST_SPI) & SPI_SR_TXE));*/ \
 							/*while (SPI_SR(ST_SPI) & SPI_SR_BSY);*/ \
 							__asm__("nop"); __asm__("nop"); __asm__("nop"); __asm__("nop"); \
@@ -278,12 +282,12 @@ SOFTWARE.
 __attribute__((always_inline)) static inline void _st_write_command_8bit(uint8_t cmd)
 {
 	#ifdef ST_RELEASE_WHEN_IDLE
-		CS_ACTIVE;
+		ST_CS_ACTIVE;
 	#endif
 	ST_DC_CMD;
 	ST_WRITE_8BIT(cmd);
 	#ifdef ST_RELEASE_WHEN_IDLE
-		CS_IDLE;
+		ST_CS_IDLE;
 	#endif
 }
 
@@ -294,12 +298,12 @@ __attribute__((always_inline)) static inline void _st_write_command_8bit(uint8_t
 __attribute__((always_inline)) static inline void _st_write_data_8bit(uint8_t dat)
 {
 	#ifdef ST_RELEASE_WHEN_IDLE
-		CS_ACTIVE;
+		ST_CS_ACTIVE;
 	#endif
 	ST_DC_DAT;
 	ST_WRITE_8BIT(dat);
 	#ifdef ST_RELEASE_WHEN_IDLE
-		CS_IDLE;
+		ST_CS_IDLE;
 	#endif
 }
 
@@ -310,13 +314,13 @@ __attribute__((always_inline)) static inline void _st_write_data_8bit(uint8_t da
 __attribute__((always_inline)) static inline void _st_write_data_16bit(uint16_t dat)
 {
 	#ifdef ST_RELEASE_WHEN_IDLE
-		CS_ACTIVE;
+		ST_CS_ACTIVE;
 	#endif
 	ST_DC_DAT;
 	ST_WRITE_8BIT((uint8_t)(dat >> 8));
 	ST_WRITE_8BIT((uint8_t)dat);
 	#ifdef ST_RELEASE_WHEN_IDLE
-		CS_IDLE;
+		ST_CS_IDLE;
 	#endif
 }
 

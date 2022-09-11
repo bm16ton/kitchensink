@@ -451,7 +451,7 @@ static const char *const usb_strings[] = {
 	"367E36723135",
 	"Black Magic GDB Server",
 	"Black Magic UART Port",
-	"@Internal Flash   /0x08000000/04*016Kg,01*064Kg,03*128Kg",
+	"@Internal Flash  /0x08000000/04*016Kg,01*064Kg,07*128Kg",
     "i2c-stm32f4-usb",
     "usb-gpio",
     "usb-adc",

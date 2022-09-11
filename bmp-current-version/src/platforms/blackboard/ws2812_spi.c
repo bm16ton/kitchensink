@@ -10,6 +10,8 @@
 
 void ws2812_init(uint32_t spi) {
 	spi_init_master(spi, SPI_CR1_BAUDRATE_FPCLK_DIV_32, 0, 0, 0, 0);
+//	spi_set_baudrate_prescaler(spi, SPI_CR1_BR_FPCLK_DIV_2);
+//	SPI1_I2SCFGR = 0;
 	spi_set_dff_8bit(spi);
 	spi_enable(spi);
 }

@@ -6,7 +6,7 @@ OBJCOPY = $(CROSS_COMPILE)objcopy
 CFLAGS += -Istm32/include -mcpu=cortex-m4 -mthumb \
 	-mfloat-abi=hard -mfpu=fpv4-sp-d16 \
 	-DSTM32F4 -I../libopencm3/include \
-	-Iplatforms/stm32
+	-Iplatforms/stm32 
 
 LINKER_SCRIPT=platforms/stm32/blackpillv2.ld
 
@@ -25,16 +25,20 @@ LDFLAGS += $(LDFLAGS_BOOT)
 CFLAGS += -DDFU_SERIAL_LENGTH=13
 endif
 
+CFLAGS += -DBLACKPILLV2
+CFLAGS += -DENABLE_NEOPIXEL
+
 VPATH += platforms/stm32
 
 SRC +=               \
-	traceswodecode.c \
-	traceswo.c	\
 	usbuart.c	\
 	serialno.c	\
 	timing.c	\
 	timing_stm32.c	\
+    ws2812_spi.c \
+    st7789_stm32_spi.c \
 
+    
 ifneq ($(BMP_BOOTLOADER), 1)
 all:	blackmagic.bin
 else
@@ -50,3 +54,4 @@ blackmagic_dfu.hex:    blackmagic_dfu
 endif
 host_clean:
 	-$(Q)$(RM) blackmagic.bin
+

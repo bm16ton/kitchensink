@@ -21,7 +21,9 @@
 /* This file implements the platform specific functions for the STM32
  * implementation.
  */
-
+#include <errno.h>
+#include <stdio.h>
+#include <unistd.h>
 #include "general.h"
 #include "usb.h"
 #include "usbuart.h"
@@ -54,69 +56,41 @@
 #include "timing_stm32.h"
 #include "st7789_stm32_spi.h"
 #include "fonts/font_fixedsys_mono_24.h"
+#include "fonts/pic.h"
+//#include "fonts/badger.h"
+//#include "fonts/img_flag.h"
+#include "fonts/bitmap_typedefs.h"
 #include "ILI9486_Defines.h"
+#include "fonts/font_ubuntu_48.h"
+#include <libopencm3/stm32/usart.h>
+
 int usbmode;
 void neopixel_init(void);
 void adc_init(void);
-// void u8log_Init(u8log_t *u8log, uint8_t width, uint8_t height, uint8_t *buf);
-//static uint8_t u8x8_gpio_and_delay_cm3(u8x8_t *u8x8, uint8_t msg, uint8_t arg_int, void *arg_ptr);
-//static uint8_t u8x8_byte_hw_i2c_cm3(u8x8_t *u8x8, uint8_t msg, uint8_t arg_int, void *arg_ptr);
-//static void i2c_setup2(void);
-//void ulib8run(void);
-//void ulib8run2(void);
+
 static char ret2[] = "0.0V";
 int adcrun = 0;
 jmp_buf fatal_error_jmpbuf;
 extern char _ebss[];
 uint8_t usbd_control_buffer[256];
-u8x8_t u8x8_i, *u8x8 = &u8x8_i;
-void clock_setup(void);
-/*
-static int usb_fibre(fibre_t *fibre)
-{
-	PT_BEGIN_FIBRE(fibre);
-    SCB_VTOR = (uint32_t) 0x08000000;
-	rcc_periph_clock_enable(RCC_OTGFS);
 
-	gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE,
-			GPIO11 | GPIO12);
-	gpio_set_af(GPIOA, GPIO_AF10, GPIO11 | GPIO12);
+#define USART_CONSOLE USART1
 
-	usbdev = usbd_init(&otgfs_usb_driver, &dev, &config2,
-//    usbd_dev = usbd_init(&stm32f107_usb_driver, &dev, &config,
-			usb2_strings, sizeof(usb2_strings)/sizeof(char *),
-			usbd_control_buffer, sizeof(usbd_control_buffer));
-	OTG_FS_GCCFG |= OTG_GCCFG_NOVBUSSENS;
-//    OTG_FS_GUSBCFG |= OTG_GUSBCFG_FDMOD | OTG_GUSBCFG_TRDT_MASK;
-//	OTG_FS_GCCFG |= OTG_GCCFG_NOVBUSSENS | OTG_GCCFG_PWRDWN;
-//	OTG_FS_GCCFG &= ~(OTG_GCCFG_VBUSBSEN | OTG_GCCFG_VBUSASEN);
-//	usbd_register_set_config_callback(usbdev, usb_set_config);
-	usbd_register_set_config_callback(usbdev, usb_set_config);
-	usbd_register_set_config_callback(usbdev, gpio_set_config);
-	usbd_register_set_config_callback(usbdev, usbadc_set_config);
-//    usbuart_init();
-
-	while (true) {
-		usbd_poll(usbdev);
-		PT_YIELD();
-	}
-
-	PT_END();
-}
-static fibre_t usb_task = FIBRE_VAR_INIT(usb_fibre);
-*/
+int _write(int file, char *ptr, int len);
+static void usart_setup(void);
 
 void platform_init(void)
 {
 	volatile uint32_t *magic = (uint32_t *)_ebss;
 	/* Enable GPIO peripherals */
 	rcc_periph_clock_enable(RCC_GPIOA);
-	rcc_periph_clock_enable(RCC_GPIOC);
 	rcc_periph_clock_enable(RCC_GPIOB);
+	rcc_periph_clock_enable(RCC_GPIOC);
+	rcc_periph_clock_enable(RCC_GPIOE);
     gpio_mode_setup(GPIOA, GPIO_MODE_INPUT,
 					GPIO_PUPD_PULLUP, GPIO0);
-	gpio_mode_setup(GPIOC, GPIO_MODE_INPUT,
-					GPIO_PUPD_PULLUP, GPIO15);
+	gpio_mode_setup(GPIOE, GPIO_MODE_INPUT,
+					GPIO_PUPD_PULLUP, GPIO4);
 	/* Check the USER button*/
 	if (!gpio_get(GPIOA, GPIO0) ||
 		((magic[0] == BOOTMAGIC0) && (magic[1] == BOOTMAGIC1)))
@@ -135,13 +109,13 @@ void platform_init(void)
 		scb_reset_core();
 	}
 	
-		if (!gpio_get(GPIOC, GPIO15))
+		if (!gpio_get(GPIOE, GPIO4))
 	{
 	
 	rcc_clock_setup_pll(&rcc_hse_8mhz_3v3[RCC_CLOCK_3V3_168MHZ]);
     
-    gpio_mode_setup(GPIOC, GPIO_MODE_OUTPUT,
-			GPIO_PUPD_NONE, GPIO13);
+    gpio_mode_setup(GPIOA, GPIO_MODE_OUTPUT,
+			GPIO_PUPD_NONE, GPIO6);
 	/* Enable peripherals */
     SCB_VTOR = (uint32_t) 0x08000000;
 	rcc_periph_clock_enable(RCC_OTGFS);
@@ -170,7 +144,7 @@ void platform_init(void)
 //	irq_pin_init();
 //	pwm_probe();
 //	gpio_clear(GPIOC, GPIO13);
-    gpio_clear(GPIOC, GPIO13);
+    gpio_clear(GPIOA, GPIO6);
 
 
     
@@ -185,26 +159,31 @@ void platform_init(void)
           
     st_fill_screen(ST_COLOR_YELLOW);
 
-	st_draw_string_withbg(10, 5, "16ton presents", ST_COLOR_RED, ST_COLOR_PURPLE, &font_fixedsys_mono_24);
-	st_draw_string(10, 50, "white magic probe", ST_COLOR_NAVY, &font_fixedsys_mono_24);
-    st_draw_string(10, 100, "usb adc i2c", ST_COLOR_RED, &font_fixedsys_mono_24);
- 	OTG_FS_GCCFG |= OTG_GCCFG_NOVBUSSENS | OTG_GCCFG_PWRDWN;
-	OTG_FS_GCCFG &= ~(OTG_GCCFG_VBUSBSEN | OTG_GCCFG_VBUSASEN);
+	st_draw_string_withbg(10, 5, "16ton presents", ST_COLOR_RED, ST_COLOR_PURPLE, &font_ubuntu_48);
+//	st_draw_string(10, 50, "white magic probe", ST_COLOR_NAVY, &font_fixedsys_mono_24);
+    st_draw_string(10, 69, "usb adc i2c", ST_COLOR_RED, &font_ubuntu_48);
+    st_draw_bitmap(352, 192, &bm16ton);
+//    		st_draw_string(10, 120, rcc_get_spi_clk_freq(SPI3), 0xffff, &font_fixedsys_mono_24);
+// 	OTG_FS_GCCFG |= OTG_GCCFG_NOVBUSSENS | OTG_GCCFG_PWRDWN;
+//	OTG_FS_GCCFG &= ~(OTG_GCCFG_VBUSBSEN | OTG_GCCFG_VBUSASEN);
 	
 //	return;
 	} else {
 	rcc_clock_setup_pll(&rcc_hse_8mhz_3v3[RCC_CLOCK_3V3_168MHZ]);
-    
+   int sspeed;
+    int sspeed2;
 	/* Enable peripherals */
 	rcc_periph_clock_enable(RCC_OTGFS);
 	rcc_periph_clock_enable(RCC_CRC);
+	rcc_periph_clock_enable(RCC_USART1);
     usbmode = 2;
+    usart_setup();
 	/* Set up USB Pins and alternate function*/
 	gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO11 | GPIO12);
 	gpio_set_af(GPIOA, GPIO_AF10, GPIO11 | GPIO12);
 
-	GPIOA_OSPEEDR &= 0x3C00000C;
-	GPIOA_OSPEEDR |= 0x28000008;
+	GPIOC_OSPEEDR &= ~0xF30;
+	GPIOC_OSPEEDR |= 0xA20;
 
 	gpio_mode_setup(JTAG_PORT, GPIO_MODE_OUTPUT,
 					GPIO_PUPD_NONE,
@@ -218,19 +197,20 @@ void platform_init(void)
 					TDO_PIN);
 	gpio_set_output_options(TDO_PORT, GPIO_OTYPE_PP, GPIO_OSPEED_2MHZ,
 							TDO_PIN | TMS_PIN);
-
+/*
 	gpio_mode_setup(LED_PORT, GPIO_MODE_OUTPUT,
 					GPIO_PUPD_NONE,
 					LED_IDLE_RUN | LED_ERROR | LED_BOOTLOADER);
 
 	gpio_mode_setup(LED_PORT_UART, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, LED_UART);
 
-    
+ */ 
 //    i2c_init();
 //	platform_timing_init();
 //    usbgpio_init();
+
     systime_setup(168000);
-	blackmagic_usb_init(0);
+ 	blackmagic_usb_init(0);
 	usbuart_init();
 	
     adc_init();
@@ -239,168 +219,66 @@ void platform_init(void)
 //    ulib8run();
     st_init();
     
-    st_fill_screen(ILI9486_RED);
+    st_fill_screen(ILI9486_LIGHTGREY);
     delay(122);
+//    char test;
+//    ret2[0] = (char)rcc_get_spi_clk_freq(SPI3);
 //    st_set_address_window(0, 0, TFT_WIDTH - 1, TFT_HEIGHT - 1);
 //	st_draw_string_withbg(10, 2, "16ton presents", ST_COLOR_YELLOW, ST_COLOR_BLACK, &font_fixedsys_mono_24);
-	st_draw_string(10, 100, "white magic probe", 0xffff, &font_fixedsys_mono_24);
+    st_draw_bitmap(352, 192, &bm16ton);
+	st_draw_string(10, 20, "white magic probe", ST_COLOR_BLACK, &font_ubuntu_48);
+//		st_draw_string(10, 120, ret2, 0xffff, &font_fixedsys_mono_24);
 	// left lines lft/right updwn then rightvlines lft/rght up/dwn 
-	st_draw_rectangle(40, 15, 80, 25, ILI9486_GREEN);
+//	st_draw_rectangle(40, 15, 80, 25, ILI9486_GREEN);
 //	st_fill_screen(ST_COLOR_YELLOW);
-	// https://github.com/libopencm3/libopencm3/pull/1256#issuecomment-779424001
+	sspeed = rcc_get_spi_clk_freq(SPI1);
+	sspeed2 = rcc_get_spi_clk_freq(SPI2);
 	OTG_FS_GCCFG |= OTG_GCCFG_NOVBUSSENS | OTG_GCCFG_PWRDWN;
 	OTG_FS_GCCFG &= ~(OTG_GCCFG_VBUSBSEN | OTG_GCCFG_VBUSASEN);
+	printf("spi1 clock speed %d\n", sspeed);
+	printf("spi2 clock speed %d\n", sspeed2);
 	}
 }
 
-void clock_setup(void)
+int _write(int file, char *ptr, int len)
 {
-	/* Base board frequency, set to 168Mhz */
-//	rcc_clock_setup_pll(&rcc_hse_8mhz_3v3[RCC_CLOCK_3V3_168MHZ]);
+	int i;
 
-	/* clock rate / 168000 to get 1mS interrupt rate */
-
-	systick_set_reload(96000);
-
-	systick_set_clocksource(STK_CSR_CLKSOURCE_AHB);
-	systick_counter_enable();
-
-	/* this done last */
-	systick_interrupt_enable();
+	if (file == STDOUT_FILENO || file == STDERR_FILENO) {
+		for (i = 0; i < len; i++) {
+			if (ptr[i] == '\n') {
+				usart_send_blocking(USART1, '\r');
+			}
+			usart_send_blocking(USART1, ptr[i]);
+		}
+		return i;
+	}
+	errno = EIO;
+	return -1;
 }
+
+static void usart_setup(void)
+{
+	gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO9);
+
+	gpio_set_af(GPIOA, GPIO_AF7, GPIO9);
+
+	usart_set_baudrate(USART_CONSOLE, 115200);
+	usart_set_databits(USART_CONSOLE, 8);
+	usart_set_stopbits(USART_CONSOLE, USART_STOPBITS_1);
+	usart_set_mode(USART_CONSOLE, USART_MODE_TX);
+	usart_set_parity(USART_CONSOLE, USART_PARITY_NONE);
+	usart_set_flow_control(USART_CONSOLE, USART_FLOWCONTROL_NONE);
+
+	/* Finally enable the USART. */
+	usart_enable(USART_CONSOLE);
+}
+
 
 void platform_nrst_set_val(bool assert) { (void)assert; }
 bool platform_nrst_get_val(void) { return false; }
 
-/*
-static uint8_t u8x8_gpio_and_delay_cm3(u8x8_t *u8x8, uint8_t msg, uint8_t arg_int, void *arg_ptr) {
-	switch(msg) {
-	case U8X8_MSG_GPIO_AND_DELAY_INIT:
-		i2c_setup2();  // Init I2C communication 
-		break;
 
-	default:
-		u8x8_SetGPIOResult(u8x8, 1);
-		break;
-	}
-
-	return 1;
-}
-*/
-/*
-// I2C hardware transfer based on u8x8_byte.c implementation 
-static uint8_t u8x8_byte_hw_i2c_cm3(u8x8_t *u8x8, uint8_t msg, uint8_t arg_int, void *arg_ptr) {
-	static uint8_t buffer[32];   // u8g2/u8x8 will never send more than 32 bytes 
-	static uint8_t buf_idx;
-	uint8_t *data;
-
-	switch(msg) {
-	case U8X8_MSG_BYTE_SEND:
-		data = (uint8_t *)arg_ptr;
-		while(arg_int > 0) {
-			buffer[buf_idx++] = *data;
-			data++;
-			arg_int--;
-		}
-		break;
-	case U8X8_MSG_BYTE_INIT:
-		break;
-	case U8X8_MSG_BYTE_SET_DC:
-		break;
-	case U8X8_MSG_BYTE_START_TRANSFER:
-		buf_idx = 0;
-		break;
-	case U8X8_MSG_BYTE_END_TRANSFER:
-		i2c_transfer7(I2C2, 0x3C, buffer, buf_idx, NULL, 0);
-		break;
-	default:
-		return 0;
-	}
-	return 1;
-}
-*/
-/*
-static void i2c_setup2(void) {
-  // Set alternate functions for the SCL and SDA pins of I2C1. 
-	// GPIO for I2C1 
-//	u8x8_t u8x8_i, *u8x8 = &u8x8_i;
-	rcc_periph_clock_enable(RCC_GPIOB);
-
-	rcc_periph_clock_enable(RCC_I2C2);
-	gpio_mode_setup(GPIOB, GPIO_MODE_AF, GPIO_PUPD_PULLUP, GPIO10 | GPIO3);
-	gpio_set_output_options(GPIOB, GPIO_OTYPE_OD, GPIO_OSPEED_100MHZ,
-				GPIO10 | GPIO3);
-	gpio_set_af(GPIOB, GPIO_AF4, GPIO10);
-    gpio_set_af(GPIOB, GPIO_AF9, GPIO3);
-
-	i2c_peripheral_disable(I2C2);
-	i2c_set_clock_frequency(I2C2, 30);
-	i2c_set_ccr(I2C2, 30 * 5);
-	i2c_set_trise(I2C2, 30 + 1);
-	i2c_enable_ack(I2C2);
-	i2c_set_own_7bit_slave_address(I2C2, 0x32);
-	i2c_set_fast_mode(I2C2);
-//    i2c_set_standard_mode(I2C1);
-	i2c_peripheral_enable(I2C2);
-
-  for (uint32_t loop = 0; loop < 1000000; ++loop) {
-    __asm__("nop");
-  }
-}  
-
-void ulib8run(void) {
-
-	u8x8_Setup(u8x8, u8x8_d_sh1106_128x64_noname, u8x8_cad_ssd13xx_fast_i2c, u8x8_byte_hw_i2c_cm3, u8x8_gpio_and_delay_cm3);
-    i2c_setup2();
-      for (uint32_t loop = 0; loop < 800000; ++loop) {
-    __asm__("nop");
-    }
-	u8x8_InitDisplay(u8x8);
-	u8x8_SetPowerSave(u8x8,0);
-	u8x8_SetFont(u8x8, u8x8_font_7x14B_1x2_f);
-//    u8x8_SetFont(u8x8, u8x8_font_open_iconic_embedded_2x2);
-	u8x8_ClearDisplay(u8x8);
-	u8x8_DrawString(u8x8, 1,1, "16ton presents");
-//	u8x8_Draw2x2Glyph(u8x8, 0,0, 'H');
-	u8x8_SetInverseFont(u8x8, 1);
-	u8x8_DrawString(u8x8, 0,5, "BlackMagic");
-	u8x8_SetInverseFont(u8x8, 0);
-    u8x8_SetFont(u8x8, u8x8_font_7x14B_1x2_f); 
-//	u8x8_SetFont(u8x8, u8x8_font_open_iconic_embedded_2x2);
-//	u8x8_DrawGlyph(u8x8, 11,1, 65); // Bell 
- //   u8x8_ClearDisplay(u8x8);
-}
-
-
-
-
-void ulib8run2(void) {
-
-	u8x8_Setup(u8x8, u8x8_d_sh1106_128x64_noname, u8x8_cad_ssd13xx_fast_i2c, u8x8_byte_hw_i2c_cm3, u8x8_gpio_and_delay_cm3);
-	delay_ms(15);
-    i2c_setup2();
-      for (uint32_t loop = 0; loop < 800000; ++loop) {
-    __asm__("nop");
-    }
-	u8x8_InitDisplay(u8x8); 
-
-	u8x8_SetPowerSave(u8x8,0);
-
-	u8x8_SetFont(u8x8, u8x8_font_7x14B_1x2_f);
-//    u8x8_SetFont(u8x8, u8x8_font_open_iconic_embedded_2x2);
-	u8x8_ClearDisplay(u8x8);
-	u8x8_DrawString(u8x8, 1,1, "16ton presents");
-//	u8x8_Draw2x2Glyph(u8x8, 0,0, 'H');
-	u8x8_SetInverseFont(u8x8, 1);
-	u8x8_DrawString(u8x8, 0,5, "USB ADC");
-	u8x8_SetInverseFont(u8x8, 0);
-    u8x8_SetFont(u8x8, u8x8_font_7x14B_1x2_f); 
-//	u8x8_SetFont(u8x8, u8x8_font_open_iconic_embedded_2x2);
-//	u8x8_DrawGlyph(u8x8, 11,1, 65); // Bell 
-//    u8x8_ClearDisplay(u8x8);
-//    printBits(1, "poooop");
-}
-*/
 void adc_init(void)
 {
 	gpio_mode_setup(GPIOA, GPIO_MODE_ANALOG, GPIO_PUPD_NONE, GPIO2);
@@ -435,45 +313,22 @@ const char *platform_target_voltage(void)
 	ret[2] = (value >> 21) + '0';
 
    strcpy(ret2, ret);
-//   adcrun = 1;
-//    u8x8_ClearDisplay(u8x8);
    
-//	u8x8_DrawString(u8x8, 1,1, ret2);
-	
-	
+	st_draw_string(10, 100, ret2, ST_COLOR_RED, &font_fixedsys_mono_24);
 	return ret;
 }
 
-int yline = 1;
-//static char banner1[] = " USB to ADC              ";
-//static char banner2[] = " Blackmagic              ";
 
-/*
-void lcdshow(void) {
-//if (adcrun == 1) {
-//    u8x8_t u8x8_i, *u8x8 = &u8x8_i;
-//    u8x8_Setup(u8x8, u8x8_d_sh1106_128x64_noname, u8x8_cad_ssd13xx_fast_i2c, u8x8_byte_hw_i2c_cm3, u8x8_gpio_and_delay_cm3);
-//    u8x8_InitDisplay(u8x8);
-//	u8x8_SetPowerSave(u8x8,0);
-    yline = yline + 1;
-    if (yline == 16)
-         yline = 1;
-//	u8x8_SetFont(u8x8, u8x8_font_7x14B_1x2_f);
-    if (usbmode == 1) {
-    u8x8_ClearDisplay(u8x8);
-	u8x8_DrawString(u8x8, yline,3, banner1);
-    }
-
-    if (usbmode == 2) {   
-	u8x8_ClearDisplay(u8x8);
-	u8x8_DrawString(u8x8, yline,3, banner2);
-//	adcrun = 0;
-    }
-}
-*/
 void platform_request_boot(void)
 {
 	uint32_t *magic = (uint32_t *)&_ebss;
+	st_fill_screen(ILI9486_BLACK);
+	st_draw_string_withbg(90, 110, "DFU FIRMWARE UPGRADE", ST_COLOR_RED, ST_COLOR_WHITE, &font_fixedsys_mono_24);
+	usart_disable(USART_CONSOLE);
+	rcc_periph_clock_disable(RCC_USART1);
+//	gpio_clear(GPIOA, GPIO9);
+	GPIOA_MODER |= (0x00000000);
+	delay(122);
 	magic[0] = BOOTMAGIC0;
 	magic[1] = BOOTMAGIC1;
 	scb_reset_system();

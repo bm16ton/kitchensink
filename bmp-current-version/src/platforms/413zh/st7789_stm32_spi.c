@@ -775,6 +775,63 @@ void st_rotate_display(uint8_t rotation)
 	}
 }
 
+static void spi_init(void)
+{
+    // Set pin mode for SPI managed pins to alternate function
+    gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE,
+        ST_SCL		  // SCK - serial clock
+        | ST_SDA	  // MOSI - master out slave in
+        | ST_CS
+    );
+
+    // Set alternate function for SPI managed pins to AF5 for SPI2
+    gpio_set_af(GPIOA, GPIO_AF5,
+        ST_SCL       // SPI2_SCK
+        | ST_SDA    // SPI2_MOSI
+        | ST_CS
+    );
+
+
+    // Enable SPI periperal clock
+    rcc_periph_clock_enable(RCC_SPI1);
+
+    // Initialize SPI2 as master
+    spi_init_master(
+        SPI1,
+        SPI_CR1_BAUDRATE_FPCLK_DIV_4,
+        SPI_CR1_CPOL_CLK_TO_0_WHEN_IDLE,   // CPOL: Clock low when idle
+        SPI_CR1_CPHA_CLK_TRANSITION_1,     // CPHA: Clock phase: read on rising edge of clock
+        SPI_CR1_DFF_8BIT,
+        SPI_CR1_MSBFIRST);
+	SPI_CR2(SPI1) |= SPI_CR2_SSOE;
+    spi_enable_software_slave_management(SPI1);
+    spi_disable_crc(SPI1);
+
+    // Have SPI peripheral manage NSS pin (pulled low when SPI enabled)
+   // spi_enable_ss_output(SPI1);
+    spi_set_nss_high(ST_SPI);
+    gpio_set(GPIOE, GPIO11);
+    spi_enable(SPI1);
+}
+/**
+ * Initialize the display driver
+ */
+ 
+ 
+static void gpio_setup(void)
+{
+    // Enable GPIOB clock
+    rcc_periph_clock_enable(RCC_GPIOE);
+
+    // TFT Reset pin, pull low for 10uS or more to initiate reset
+    // Reset takes up to 120ms
+    gpio_mode_setup(GPIOE, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO11);
+    gpio_clear(GPIOE, GPIO11);
+
+    // TFT A0 - D/C pin, 0:Command 1:Data
+    gpio_mode_setup(GPIOE, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO9);
+    gpio_clear(GPIOE, GPIO9);
+}
 
 /**
  * Initialize the display driver
@@ -784,26 +841,26 @@ void st_init()
 	// Set gpio clock
 	ST_CONFIG_GPIO_CLOCK();
 	// Configure gpio output dir and mode
-	ST_CONFIG_GPIO();
+	gpio_setup();
 	// If using DMA, config SPI DMA
 //	#ifdef ST_USE_SPI_DMA
 //		ST_CONFIG_SPI_DMA();
 //	#endif
 	// Configure SPI settings
-	ST_CONFIG_SPI();
-
+	spi_init();
+    spi_set_nss_low(ST_SPI);
 	#ifdef ST_HAS_CS
 		ST_CS_ACTIVE;
 	#endif
-
+    gpio_clear(GPIOE, GPIO11);
 	// Hardwae reset is not mandatory if software rest is done
-	#ifdef ST_HAS_RST
+
 //		ST_RST_ACTIVE;
 		_st_fixed_delay();
 //		ST_RST_IDLE;
         _st_write_command_8bit(0x01);
 		_st_fixed_delay();
-	#endif
+	
 /*
 	_st_write_command_8bit(ST7789_SWRESET);	//1: Software reset, no args, w/delay: delay(150)
 	_st_fixed_delay();
@@ -832,26 +889,27 @@ void st_init()
 	
 	st_rotate_display(3);
 */
-  _st_write_command_8bit(0xEF);
-  _st_write_data_8bit(0x03);
-  _st_write_data_8bit(0x80);
-  _st_write_data_8bit(0x02);
+delay(170);
+      gpio_clear(GPIOE, GPIO11);
+  delay(20);
+//  _st_write_command_8bit(0x01);
 
   _st_write_command_8bit(0xCF);
   _st_write_data_8bit(0x00);
-  _st_write_data_8bit(0XC1);
+//  _st_write_data_8bit(0XC1);
+  _st_write_data_8bit(0X8B);
   _st_write_data_8bit(0X30);
 
   _st_write_command_8bit(0xED);
-  _st_write_data_8bit(0x64);
+  _st_write_data_8bit(0x67);
   _st_write_data_8bit(0x03);
   _st_write_data_8bit(0X12);
   _st_write_data_8bit(0X81);
 
   _st_write_command_8bit(0xE8);
   _st_write_data_8bit(0x85);
-  _st_write_data_8bit(0x00);
-  _st_write_data_8bit(0x78);
+  _st_write_data_8bit(0x10);
+  _st_write_data_8bit(0x7A);
 
   _st_write_command_8bit(0xCB);
   _st_write_data_8bit(0x39);
@@ -868,21 +926,22 @@ void st_init()
   _st_write_data_8bit(0x00);
 
   _st_write_command_8bit(0xC0);    //Power control
-  _st_write_data_8bit(0x23);   //VRH[5:0]
+  _st_write_data_8bit(0x1B);   //VRH[5:0]
 
   _st_write_command_8bit(0xC1);    //Power control
   _st_write_data_8bit(0x10);   //SAP[2:0];BT[3:0]
 
   _st_write_command_8bit(0xC5);    //VCM control
-  _st_write_data_8bit(0x3e);
-  _st_write_data_8bit(0x28);
+  _st_write_data_8bit(0x3F);
+  _st_write_data_8bit(0x3C);
 
   _st_write_command_8bit(0xC7);    //VCM control2
-  _st_write_data_8bit(0x86);  //--
+  _st_write_data_8bit(0xB7);  //--
 
   _st_write_command_8bit(0x36);    // Memory Access Control
 //#ifdef M5STACK
-  _st_write_data_8bit(0x20 | 0x08); // Rotation 0 (portrait mode)
+  _st_write_data_8bit(0x08);
+//  _st_write_data_8bit(0x20 | 0x08); // Rotation 0 (portrait mode)
 //#else
 //  _st_write_data_8bit(0x40 | 0x00); // Rotation 0 (portrait mode)
 //#endif
@@ -892,12 +951,12 @@ void st_init()
 
   _st_write_command_8bit(0xB1);
   _st_write_data_8bit(0x00);
-  _st_write_data_8bit(0x13); // 0x18 79Hz, 0x1B default 70Hz, 0x13 100Hz
+  _st_write_data_8bit(0x1B); // 0x18 79Hz, 0x1B default 70Hz, 0x13 100Hz
 
   _st_write_command_8bit(0xB6);    // Display Function Control
-  _st_write_data_8bit(0x08);
-  _st_write_data_8bit(0x82);
-  _st_write_data_8bit(0x27);
+  _st_write_data_8bit(0x0A);
+  _st_write_data_8bit(0xA2);
+
 
   _st_write_command_8bit(0xF2);    // 3Gamma Function Disable
   _st_write_data_8bit(0x00);
@@ -907,46 +966,50 @@ void st_init()
 
   _st_write_command_8bit(0xE0);    //Set Gamma
   _st_write_data_8bit(0x0F);
-  _st_write_data_8bit(0x31);
-  _st_write_data_8bit(0x2B);
-  _st_write_data_8bit(0x0C);
+  _st_write_data_8bit(0x2A);
+  _st_write_data_8bit(0x28);
+  _st_write_data_8bit(0x08);
   _st_write_data_8bit(0x0E);
   _st_write_data_8bit(0x08);
-  _st_write_data_8bit(0x4E);
-  _st_write_data_8bit(0xF1);
-  _st_write_data_8bit(0x37);
-  _st_write_data_8bit(0x07);
-  _st_write_data_8bit(0x10);
-  _st_write_data_8bit(0x03);
-  _st_write_data_8bit(0x0E);
-  _st_write_data_8bit(0x09);
+  _st_write_data_8bit(0x54);
+  _st_write_data_8bit(0xA9);
+  _st_write_data_8bit(0x43);
+  _st_write_data_8bit(0x0A);
+  _st_write_data_8bit(0x0F);
+  _st_write_data_8bit(0x00);
+  _st_write_data_8bit(0x00);
+  _st_write_data_8bit(0x00);
   _st_write_data_8bit(0x00);
 
   _st_write_command_8bit(0xE1);    //Set Gamma
   _st_write_data_8bit(0x00);
-  _st_write_data_8bit(0x0E);
-  _st_write_data_8bit(0x14);
-  _st_write_data_8bit(0x03);
-  _st_write_data_8bit(0x11);
+  _st_write_data_8bit(0x15);
+  _st_write_data_8bit(0x17);
   _st_write_data_8bit(0x07);
-  _st_write_data_8bit(0x31);
-  _st_write_data_8bit(0xC1);
-  _st_write_data_8bit(0x48);
-  _st_write_data_8bit(0x08);
+  _st_write_data_8bit(0x11);
+  _st_write_data_8bit(0x06);
+  _st_write_data_8bit(0x2B);
+  _st_write_data_8bit(0x56);
+  _st_write_data_8bit(0x3C);
+  _st_write_data_8bit(0x05);
+  _st_write_data_8bit(0x10);
   _st_write_data_8bit(0x0F);
-  _st_write_data_8bit(0x0C);
-  _st_write_data_8bit(0x31);
-  _st_write_data_8bit(0x36);
+  _st_write_data_8bit(0x3F);
+  _st_write_data_8bit(0x3F);
   _st_write_data_8bit(0x0F);
 
   _st_write_command_8bit(0x11);    //Exit Sleep
  
  
-  delay(120);
+ 	for (int i = 0; i < 800000; i++)    /* Wait a bit. */
+		__asm__("nop");
+//  delay(120);
  
   
   _st_write_command_8bit(0x29);    //Display on
 
+  delay(80);
+  gpio_clear(GPIOE, GPIO11);
 }
 
 

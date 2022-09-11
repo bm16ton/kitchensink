@@ -29,7 +29,7 @@
 
 //#include "systime.h"
 #ifdef BLACKPILLV2
-#define F_CPU 84000000
+#define F_CPU 168000000
 #endif
 volatile uint32_t systick_ms;
 static uint32_t cpufreq = 1;

@@ -315,8 +315,8 @@ void st_draw_bitmap(uint16_t x, uint16_t y, const tImage *bitmap)
 		uint32_t total_pixels = width * height;
 		for (uint16_t pixels = 0; pixels < total_pixels; pixels++)
 		{
-			_st_write_data_16bit((uint8_t)(bitmap->data[2*pixels]));
-			_st_write_data_16bit((uint8_t)(bitmap->data[2*pixels + 1]));
+			ST_WRITE_8BIT((uint8_t)(bitmap->data[2*pixels]));
+			ST_WRITE_8BIT((uint8_t)(bitmap->data[2*pixels + 1]));
 		}
 
 	#endif

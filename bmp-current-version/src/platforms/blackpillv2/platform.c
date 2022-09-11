@@ -138,7 +138,7 @@ void platform_init(void)
 		if (!gpio_get(GPIOC, GPIO15))
 	{
 	
-	rcc_clock_setup_pll(&rcc_hse_25mhz_3v3[RCC_CLOCK_3V3_84MHZ]);
+	rcc_clock_setup_pll(&rcc_hse_25mhz_3v3[RCC_CLOCK_3V3_96MHZ]);
     
     gpio_mode_setup(GPIOC, GPIO_MODE_OUTPUT,
 			GPIO_PUPD_NONE, GPIO13);
@@ -156,7 +156,7 @@ void platform_init(void)
 	
 	
     i2c_init();
-    systime_setup(84000);
+    systime_setup(96000);
     
 	usbgpio_init();
     blackmagic_usb_init(1);
@@ -185,7 +185,7 @@ void platform_init(void)
           
     st_fill_screen(ST_COLOR_YELLOW);
 
-	st_draw_string_withbg(10, 5, "16ton presents", ST_COLOR_BLUE, ST_COLOR_BLACK, &font_fixedsys_mono_24);
+	st_draw_string_withbg(10, 5, "16ton presents", ST_COLOR_RED, ST_COLOR_PURPLE, &font_fixedsys_mono_24);
 	st_draw_string(10, 50, "white magic probe", ST_COLOR_NAVY, &font_fixedsys_mono_24);
     st_draw_string(10, 100, "usb adc i2c", ST_COLOR_RED, &font_fixedsys_mono_24);
  	OTG_FS_GCCFG |= OTG_GCCFG_NOVBUSSENS | OTG_GCCFG_PWRDWN;
@@ -193,7 +193,7 @@ void platform_init(void)
 	
 //	return;
 	} else {
-	rcc_clock_setup_pll(&rcc_hse_25mhz_3v3[RCC_CLOCK_3V3_84MHZ]);
+	rcc_clock_setup_pll(&rcc_hse_25mhz_3v3[RCC_CLOCK_3V3_96MHZ]);
     
 	/* Enable peripherals */
 	rcc_periph_clock_enable(RCC_OTGFS);
@@ -229,7 +229,7 @@ void platform_init(void)
 //    i2c_init();
 //	platform_timing_init();
 //    usbgpio_init();
-    systime_setup(84000);
+    systime_setup(96000);
 	blackmagic_usb_init(0);
 	usbuart_init();
 	
@@ -241,7 +241,7 @@ void platform_init(void)
     
     st_fill_screen(ST_COLOR_NAVY);
 
-	st_draw_string_withbg(10, 2, "16ton presents", ST_COLOR_NAVY, ST_COLOR_BLACK, &font_fixedsys_mono_24);
+	st_draw_string_withbg(10, 2, "16ton presents", ST_COLOR_YELLOW, ST_COLOR_BLACK, &font_fixedsys_mono_24);
 	st_draw_string(10, 100, "white magic probe", 0xffff, &font_fixedsys_mono_24);
 	// left lines lft/right updwn then rightvlines lft/rght up/dwn 
 //	st_draw_rectangle(240, 15, 80, 25, ST_COLOR_YELLOW);
@@ -259,7 +259,7 @@ void clock_setup(void)
 
 	/* clock rate / 168000 to get 1mS interrupt rate */
 
-	systick_set_reload(84000);
+	systick_set_reload(96000);
 
 	systick_set_clocksource(STK_CSR_CLKSOURCE_AHB);
 	systick_counter_enable();
