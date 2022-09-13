@@ -43,7 +43,7 @@
 #define PWM2_PIN     GPIO8
 
 #define PWM3_PORT    GPIOC
-#define PWM3_PIN     GPIO9
+#define PWM3_PIN     GPIO0
 #endif
 #ifdef F103
 #define GPIO1_PORT   GPIOC      //LED
@@ -100,7 +100,7 @@ static void irq_pin_init(void)
     exti_set_trigger(EXTI4, irqtype);
 	exti_enable_request(EXTI4);
 }
-
+/*
 static void irq_none(void)
 {
     nvic_disable_irq(NVIC_EXTI4_IRQ);
@@ -108,7 +108,7 @@ static void irq_none(void)
 	exti_disable_request(EXTI4);
 	my_delay_2();
 }
-
+*/
 #endif
 
 #ifdef F103
@@ -339,6 +339,9 @@ static enum usbd_request_return_codes usb_control_gpio_request(
    if ((req->bmRequestType & 0x7F) != USB_REQ_TYPE_VENDOR)
      return USBD_REQ_NEXT_CALLBACK;
 
+    
+    printf("bmrequesttype %d\n", req->bmRequestType);
+    
    (*len) = 1;
    (*buf)[0] = 1; //success
 

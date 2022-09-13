@@ -162,6 +162,7 @@ static enum usbd_request_return_codes usb_control_request(
 	(void)dev;
 	(void)complete;
 
+
 	switch (req->bRequest) {
 	case CMD_ECHO:
 		memcpy(reply_buf, &req->wValue, sizeof(req->wValue));
@@ -229,7 +230,7 @@ void usb_set_config(usbd_device *dev, uint16_t wValue)
 void i2c_init(void)
 {
 	/* clocks */
-//	rcc_periph_clock_enable(RCC_GPIOB);
+	rcc_periph_clock_enable(RCC_GPIOB);
 	rcc_periph_clock_enable(RCC_I2C1);
 
 	/* initialize the peripheral */

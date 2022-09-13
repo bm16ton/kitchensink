@@ -16,8 +16,8 @@
 static const struct usb_device_descriptor dev2 = {
 	.bLength = USB_DT_DEVICE_SIZE,
 	.bDescriptorType = USB_DT_DEVICE,
-	.bcdUSB = 0x0200,
-	.bDeviceClass = 0xFE,
+	.bcdUSB = 0x0100,
+	.bDeviceClass = 0xEF,
 	.bDeviceSubClass = 2,
 	.bDeviceProtocol = 1,
 	.bMaxPacketSize0 = 64,
@@ -108,6 +108,42 @@ static const struct usb_interface_descriptor iface_sourcesink2[] = {
 	}
 };
 
+const struct usb_dfu_descriptor dfu2_function = {
+	.bLength = sizeof(struct usb_dfu_descriptor),
+	.bDescriptorType = DFU_FUNCTIONAL,
+	.bmAttributes = USB_DFU_CAN_DOWNLOAD | USB_DFU_WILL_DETACH,
+	.wDetachTimeout = 255,
+	.wTransferSize = 1024,
+	.bcdDFUVersion = 0x011A,
+};
+
+const struct usb_interface_descriptor dfu2_iface = {
+	.bLength = USB_DT_INTERFACE_SIZE,
+	.bDescriptorType = USB_DT_INTERFACE,
+	.bInterfaceNumber = 3,
+	.bAlternateSetting = 0,
+	.bNumEndpoints = 0,
+	.bInterfaceClass = 0xFE,
+	.bInterfaceSubClass = 1,
+	.bInterfaceProtocol = 1,
+	.iInterface = 4,
+
+	.extra = &dfu2_function,
+	.extralen = sizeof(dfu2_function),
+};
+
+static const struct usb_iface_assoc_descriptor dfu2_assoc = {
+	.bLength = USB_DT_INTERFACE_ASSOCIATION_SIZE,
+	.bDescriptorType = USB_DT_INTERFACE_ASSOCIATION,
+	.bFirstInterface = 3, //2
+	.bInterfaceCount = 1,
+	.bFunctionClass = 0xFE,
+	.bFunctionSubClass = 1,
+	.bFunctionProtocol = 1,
+	.iFunction = 4,
+};
+
+
 const struct usb_interface ifacespb[] = {{
 	.num_altsetting = 1,
 	.altsetting = &i2i2c_iface2,
@@ -117,13 +153,17 @@ const struct usb_interface ifacespb[] = {{
 	}, {
 	.num_altsetting = 1,
 	.altsetting = iface_sourcesink2,
+	}, {
+	.num_altsetting = 1,
+	.iface_assoc = &dfu_assoc,
+	.altsetting = &dfu2_iface,
 }};
 
 static const struct usb_config_descriptor config2 = {
 	.bLength = USB_DT_CONFIGURATION_SIZE,
 	.bDescriptorType = USB_DT_CONFIGURATION,
 	.wTotalLength = 0, /* ?automatically calculated? */
-	.bNumInterfaces = 3,
+	.bNumInterfaces = 4,
 	.bConfigurationValue = 1,
 	.iConfiguration = 0,
 	.bmAttributes = 0x80, /* bus powered */
@@ -136,8 +176,8 @@ static const char *usb2_strings[] = {
 	"redfelineninja.org.uk",
 	"i2c-stm32f4-usb",
 	"testbulk",
-	"@Internal Flash   /0x08000000/04*016Kg,01*064Kg,03*128Kg",
-	"367E36723135",
+	"@Internal Flash  /0x08000000/04*016Kg,01*064Kg,07*128Kg",
+	"205D338C3156",
 };
 
 #endif

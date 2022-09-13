@@ -19,8 +19,8 @@ static int configured;
 #define SAMPLES_PER_MESSAGE 10
 int num_samples = 0;
 uint16_t samples[SAMPLES_PER_MESSAGE] __attribute__ ((aligned(2)));
-static void send_samples(uint8_t ep);
-static void adc_once(uint8_t ep);
+//static void send_samples(uint8_t ep);
+static void adc_once(void);
 
 static enum usbd_request_return_codes gadget0_control_request(usbd_device *dev,
 	struct usb_setup_data *req,
@@ -96,7 +96,7 @@ static void adc_once_f103(uint8_t ep)
 #endif
 
 #ifndef F103
-static void adc_once(uint8_t ep)
+static void adc_once(void)
 {
 //	uint8_t channel_array[16];
 #ifdef BLACKPILLV2
@@ -127,6 +127,7 @@ uint8_t channels[] = { ADC_CHANNEL0, };
 static void gadget0_ss_out_cb(usbd_device *dev, uint8_t ep)
 {
 	(void) ep;
+	(void)dev;
 	uint16_t x;
 	/* TODO - if you're really keen, perf test this. tiva implies it matters */
 	/* char buf[64] __attribute__ ((aligned(4))); */
@@ -152,17 +153,18 @@ static void gadget0_ss_in_cb(usbd_device *dev, uint8_t ep)
 #ifdef F103   
     adc_once_f103(ep);
 #else
-    adc_once(ep);
+    adc_once();
 #endif
    
     uint16_t x = usbd_ep_write_packet(usbdev, ep,&samples, sizeof(samples));
     if (x != BULK_EP_MAXPACKET) {
 	;
 	}
+
 	if (num_samples == SAMPLES_PER_MESSAGE) {
 //        send_samples(ep);
-        num_samples = 0;
-        }
+    num_samples = 0;
+    }
 	//assert(x == sizeof(buf));
 #ifdef F103 	
 	    gpio_clear(GPIOC, GPIO1);
@@ -186,11 +188,11 @@ void usbadc_set_config(usbd_device *dev, uint16_t wValue)
 		/* Prime source for IN data. */
 		gadget0_ss_in_cb(usbdev, 0x83);
 }
-
+/*
 static void send_samples(uint8_t ep)
 {
 
     usbd_ep_write_packet(usbdev, ep,&samples, sizeof(samples));
 //     usbd_ep_write_packet(usbdev, 0x80 | ep, buf, x);
 }
-
+*/

@@ -128,7 +128,7 @@ void platform_init(void)
     usbmode = 1;
 	/* Set up USB Pins and alternate function*/
 	
-	
+	usart_setup();
     i2c_init();
     systime_setup(168000);
     
@@ -219,7 +219,7 @@ void platform_init(void)
 //    ulib8run();
     st_init();
     
-    st_fill_screen(ILI9486_LIGHTGREY);
+    st_fill_screen(0xD69A);
     delay(122);
 //    char test;
 //    ret2[0] = (char)rcc_get_spi_clk_freq(SPI3);
@@ -260,13 +260,17 @@ int _write(int file, char *ptr, int len)
 static void usart_setup(void)
 {
 	gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO9);
-
 	gpio_set_af(GPIOA, GPIO_AF7, GPIO9);
-
+	gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_PULLUP, 
+	                GPIO10); 
+	gpio_set_output_options(GPIOA, GPIO_OTYPE_OD, 
+					GPIO_OSPEED_100MHZ, GPIO10); 
+	gpio_set_af(GPIOA, GPIO_AF7, GPIO10); 
+	
 	usart_set_baudrate(USART_CONSOLE, 115200);
 	usart_set_databits(USART_CONSOLE, 8);
 	usart_set_stopbits(USART_CONSOLE, USART_STOPBITS_1);
-	usart_set_mode(USART_CONSOLE, USART_MODE_TX);
+	usart_set_mode(USART_CONSOLE, USART_MODE_TX_RX);
 	usart_set_parity(USART_CONSOLE, USART_PARITY_NONE);
 	usart_set_flow_control(USART_CONSOLE, USART_FLOWCONTROL_NONE);
 
@@ -313,8 +317,10 @@ const char *platform_target_voltage(void)
 	ret[2] = (value >> 21) + '0';
 
    strcpy(ret2, ret);
-   
-	st_draw_string(10, 100, ret2, ST_COLOR_RED, &font_fixedsys_mono_24);
+
+   st_fill_rect(1, 110, 74, 60, ILI9486_LIGHTGREY);
+   st_draw_string(10, 65, "Target IO", ILI9486_DARKGREEN, &font_ubuntu_48);
+	st_draw_string(10, 110, ret2, ST_COLOR_RED, &font_ubuntu_48);
 	return ret;
 }
 

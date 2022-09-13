@@ -146,7 +146,7 @@ SOFTWARE.
 #define ST_DC			GPIO1
 #define ST_SDA			GPIO15
 #define ST_SCL			GPIO10
-#define ST_BLK			GPIO6
+#define ST_BLK			GPIO14
 // To use Chip Select (CS), uncomment `HAS_CS` above
 #define ST_CS			GPIO12
 

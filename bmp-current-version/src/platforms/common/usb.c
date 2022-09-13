@@ -120,6 +120,7 @@ void blackmagic_usb_init(int altusb)
 	usbd_register_set_config_callback(usbdev, usb_set_config);
 	usbd_register_set_config_callback(usbdev, gpio_set_config);
 	usbd_register_set_config_callback(usbdev, usbadc_set_config);
+    usbd_register_set_config_callback(usbdev, dfu_set_config2);
 	delay_setup();
 	nvic_set_priority(USB_IRQ, IRQ_PRI_USB);
 	nvic_enable_irq(USB_IRQ);

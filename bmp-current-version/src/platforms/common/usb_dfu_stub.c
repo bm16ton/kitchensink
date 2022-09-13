@@ -29,7 +29,7 @@
 #include "stlinkv3.h"
 #endif
 
-static void dfu_detach_complete(usbd_device *const dev, struct usb_setup_data *const req)
+void dfu_detach_complete(usbd_device *const dev, struct usb_setup_data *const req)
 {
 	(void)dev;
 	(void)req;
@@ -68,9 +68,44 @@ static enum usbd_request_return_codes dfu_control_request(usbd_device *const dev
 	return USBD_REQ_NOTSUPP;
 }
 
+static enum usbd_request_return_codes dfu_control_request2(usbd_device *const dev, struct usb_setup_data *req,
+	uint8_t **buf, uint16_t *len, void (**complete)(usbd_device *dev, struct usb_setup_data *req))
+{
+	(void)dev;
+	/* Is the request for the DFU interface? */
+	if (req->wIndex != 3)
+		return USBD_REQ_NEXT_CALLBACK;
+
+	switch (req->bRequest) {
+	case DFU_GETSTATUS:
+		(*buf)[0] = DFU_STATUS_OK;
+		(*buf)[1] = 0;
+		(*buf)[2] = 0;
+		(*buf)[3] = 0;
+		(*buf)[4] = STATE_APP_IDLE;
+		(*buf)[5] = 0; /* iString not used here */
+		*len = 6;
+
+		return USBD_REQ_HANDLED;
+	case DFU_DETACH:
+		*complete = dfu_detach_complete;
+		return USBD_REQ_HANDLED;
+	}
+	/* If the request isn't one of the two above, we don't care as this is a DFU stub. */
+	return USBD_REQ_NOTSUPP;
+}
+
+
 void dfu_set_config(usbd_device *const dev, const uint16_t value)
 {
 	(void)value;
 	usbd_register_control_callback(dev, USB_REQ_TYPE_CLASS | USB_REQ_TYPE_INTERFACE,
 		USB_REQ_TYPE_TYPE | USB_REQ_TYPE_RECIPIENT, dfu_control_request);
+}
+
+void dfu_set_config2(usbd_device *const dev, const uint16_t value)
+{
+	(void)value;
+	usbd_register_control_callback(dev, USB_REQ_TYPE_CLASS | USB_REQ_TYPE_INTERFACE,
+		USB_REQ_TYPE_TYPE | USB_REQ_TYPE_RECIPIENT, dfu_control_request2);
 }

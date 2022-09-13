@@ -24,5 +24,6 @@
 #include "usb.h"
 
 void dfu_set_config(usbd_device *dev, uint16_t value);
-
+void dfu_set_config2(usbd_device *dev, uint16_t value);
+void dfu_detach_complete(usbd_device *const dev, struct usb_setup_data *const req);
 #endif /*USB_DFU_STUB_H*/
