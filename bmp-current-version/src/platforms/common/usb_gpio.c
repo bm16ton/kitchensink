@@ -340,7 +340,7 @@ static enum usbd_request_return_codes usb_control_gpio_request(
      return USBD_REQ_NEXT_CALLBACK;
 
     
-    printf("bmrequesttype %d\n", req->bmRequestType);
+//    printf("bmrequesttype %d\n", req->bmRequestType);
     
    (*len) = 1;
    (*buf)[0] = 1; //success

@@ -128,10 +128,10 @@ SOFTWARE.
 
 //#define ST_USE_SPI_DMA
 #define ST_HAS_RST
-//#define ST_HAS_CS
-//#ifdef ST_HAS_CS
-//	#define ST_RELEASE_WHEN_IDLE
-//#endif
+#define ST_HAS_CS
+#ifdef ST_HAS_CS
+	#define ST_RELEASE_WHEN_IDLE
+#endif
 
 
 #define ST_SPI			SPI2
@@ -145,8 +145,9 @@ SOFTWARE.
 #define ST_RST			GPIO13
 #define ST_DC			GPIO1
 #define ST_SDA			GPIO15
+#define ST_MISO			GPIO14
 #define ST_SCL			GPIO10
-#define ST_BLK			GPIO14
+//#define ST_BLK			GPIO14
 // To use Chip Select (CS), uncomment `HAS_CS` above
 #define ST_CS			GPIO12
 
@@ -156,7 +157,10 @@ SOFTWARE.
 #define ST_RST_ACTIVE		gpio_clear(GPIOB, ST_RST)
 #define ST_RST_IDLE			gpio_set(GPIOB, ST_RST)
 #ifdef ST_HAS_CS
-	#define ST_CS_ACTIVE		gpio_clear(GPIOB, GPIO12)
+	#define ST_CS_ACTIVE		{ \
+	                            gpio_set(GPIOB, GPIO9); \
+	                            gpio_clear(GPIOB, GPIO12); \
+	                            } 
 	#define ST_CS_IDLE			gpio_set(GPIOB, GPIO12)
 #endif
 
@@ -277,25 +281,25 @@ SOFTWARE.
 __attribute__((always_inline)) static inline void _st_write_command_8bit(uint8_t cmd)
 {
 	#ifdef ST_RELEASE_WHEN_IDLE
-		CS_ACTIVE;
+		ST_CS_ACTIVE;
 	#endif
 	ST_DC_CMD;
 	ST_WRITE_8BIT(cmd);
 	#ifdef ST_RELEASE_WHEN_IDLE
-		CS_IDLE;
+		ST_CS_IDLE;
 	#endif
 }
 
 __attribute__((always_inline)) static inline void _st_write_command_16bit(uint8_t cmd)
 {
 	#ifdef ST_RELEASE_WHEN_IDLE
-		CS_ACTIVE;
+		ST_CS_ACTIVE;
 	#endif
 	ST_DC_CMD;
 	ST_WRITE_8BIT((uint8_t)(cmd >> 8));
 	ST_WRITE_8BIT((uint8_t)cmd);
 	#ifdef ST_RELEASE_WHEN_IDLE
-		CS_IDLE;
+		ST_CS_IDLE;
 	#endif
 }
 /*
@@ -305,12 +309,12 @@ __attribute__((always_inline)) static inline void _st_write_command_16bit(uint8_
 __attribute__((always_inline)) static inline void _st_write_data_8bit(uint8_t dat)
 {
 	#ifdef ST_RELEASE_WHEN_IDLE
-		CS_ACTIVE;
+		ST_CS_ACTIVE;
 	#endif
 	ST_DC_DAT;
 	ST_WRITE_8BIT(dat);
 	#ifdef ST_RELEASE_WHEN_IDLE
-		CS_IDLE;
+		ST_CS_IDLE;
 	#endif
 }
 
@@ -321,13 +325,13 @@ __attribute__((always_inline)) static inline void _st_write_data_8bit(uint8_t da
 __attribute__((always_inline)) static inline void _st_write_data_16bit(uint16_t dat)
 {
 	#ifdef ST_RELEASE_WHEN_IDLE
-		CS_ACTIVE;
+		ST_CS_ACTIVE;
 	#endif
 	ST_DC_DAT;
 	ST_WRITE_8BIT((uint8_t)(dat >> 8));
 	ST_WRITE_8BIT((uint8_t)dat);
 	#ifdef ST_RELEASE_WHEN_IDLE
-		CS_IDLE;
+		ST_CS_IDLE;
 	#endif
 }
 

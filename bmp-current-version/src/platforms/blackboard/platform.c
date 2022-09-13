@@ -52,6 +52,7 @@
 #include <librfn/time.h>
 #include <librfn/util.h>
 //#include "systime.h"
+#include "xpt2046.h"
 #include "ws2812_spi.h"
 #include "timing_stm32.h"
 #include "st7789_stm32_spi.h"
@@ -64,9 +65,17 @@
 #include "fonts/font_ubuntu_48.h"
 #include <libopencm3/stm32/usart.h>
 
+#define IRQ_TYPE_NONE		0
+#define IRQ_TYPE_EDGE_RISING	0x00000001
+#define IRQ_TYPE_EDGE_FALLING	0x00000002
+#define IRQ_TYPE_EDGE_BOTH	IRQ_TYPE_EDGE_FALLING | IRQ_TYPE_EDGE_RISING
+#define IRQ_TYPE_LEVEL_HIGH	0x00000004
+#define IRQ_TYPE_LEVEL_LOW	0x00000008
+
 int usbmode;
 void neopixel_init(void);
 void adc_init(void);
+static void tsirq_pin_init(void);
 
 static char ret2[] = "0.0V";
 int adcrun = 0;
@@ -218,7 +227,8 @@ void platform_init(void)
     neopixel_init();
 //    ulib8run();
     st_init();
-    
+    delay(10);
+//    tsirq_pin_init();
     st_fill_screen(0xD69A);
     delay(122);
 //    char test;
@@ -231,6 +241,7 @@ void platform_init(void)
 	// left lines lft/right updwn then rightvlines lft/rght up/dwn 
 //	st_draw_rectangle(40, 15, 80, 25, ILI9486_GREEN);
 //	st_fill_screen(ST_COLOR_YELLOW);
+    tsirq_pin_init();
 	sspeed = rcc_get_spi_clk_freq(SPI1);
 	sspeed2 = rcc_get_spi_clk_freq(SPI2);
 	OTG_FS_GCCFG |= OTG_GCCFG_NOVBUSSENS | OTG_GCCFG_PWRDWN;
@@ -278,6 +289,40 @@ static void usart_setup(void)
 	usart_enable(USART_CONSOLE);
 }
 
+static void tsirq_pin_init(void)
+{
+//    nvic_disable_irq(NVIC_EXTI0_IRQ);
+
+	delay(100);
+    nvic_enable_irq(NVIC_EXTI1_IRQ);					
+	gpio_mode_setup(GPIOA, GPIO_MODE_INPUT, GPIO_PUPD_NONE, GPIO1);
+//    gpio_mode_setup(GPIOA, GPIO_MODE_INPUT,
+//					GPIO_PUPD_PULLUP, GPIO3);
+//    gpio_clear(GPIOA, GPIO3);
+	delay(100);
+	exti_select_source(EXTI1, GPIO1);
+    exti_set_trigger(EXTI1, IRQ_TYPE_EDGE_FALLING);
+	exti_enable_request(EXTI1);
+}
+
+void exti1_isr(void)
+{
+//	exti_reset_request(EXTI1);
+    volatile int xrw;
+    volatile int yrw;
+    
+    xrw = ts_get_x_raw();
+    yrw = ts_get_y_raw();
+    printf("xraw =  %d\n", xrw);
+    printf("yraw =  %d\n", yrw);
+//    delay(100);
+	for (unsigned i = 0; i < 8000; i++)
+	  {
+		__asm__("nop");
+	  }
+    exti_reset_request(EXTI1);
+    exti_set_trigger(EXTI1, IRQ_TYPE_EDGE_FALLING);
+}
 
 void platform_nrst_set_val(bool assert) { (void)assert; }
 bool platform_nrst_get_val(void) { return false; }

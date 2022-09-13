@@ -32,7 +32,7 @@ SRC +=               \
 	timing_stm32.c	\
     ws2812_spi.c \
     st7789_stm32_spi.c \
-
+    xpt2046.c \
     
 ifneq ($(BMP_BOOTLOADER), 1)
 all:	blackmagic.bin

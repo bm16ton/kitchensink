@@ -24,6 +24,8 @@ SOFTWARE.
 #include "ILI9486_Defines.h"
 #include "timing_stm32.h"
 #include "st7789_stm32_spi.h"
+#include "xpt2046.h"
+
 #define ST_BUFFER_SIZE_BYTES	256
 //TFT width and height default global variables
 uint16_t st_tftwidth = 480;
@@ -802,6 +804,8 @@ static void spi_init(void)
         ST_SCL		  // SCK - serial clock
         | ST_SDA	  // MOSI - master out slave in
         | ST_CS	  // NSS - slave select
+        | ST_MISO //miso
+//       | TS_CS_PIN  // gpio A9
     );
 
     // Set alternate function for SPI managed pins to AF5 for SPI2
@@ -809,8 +813,14 @@ static void spi_init(void)
         ST_SCL       // SPI2_SCK
         | ST_SDA    // SPI2_MOSI
         | ST_CS     // SPI2_NSS
+        | ST_MISO //miso
+//        | TS_CS_PIN  // gpio A9
     );
 
+    gpio_mode_setup(GPIOB, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO9);
+	gpio_set_output_options(GPIOB, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ,
+							GPIO9);
+	gpio_set(GPIOB, GPIO9);
     // Enable SPI periperal clock
     rcc_periph_clock_enable(RCC_SPI2);
 
@@ -823,11 +833,14 @@ static void spi_init(void)
         SPI_CR1_DFF_8BIT,
         SPI_CR1_MSBFIRST);
 
+    spi_set_full_duplex_mode(SPI2);
     spi_disable_crc(SPI2);
-
+    spi_enable_software_slave_management(SPI2);
+    spi_set_nss_high(SPI2);
+    SPI_I2SCFGR(SPI2) &= ~SPI_I2SCFGR_I2SMOD;
     // Have SPI peripheral manage NSS pin (pulled low when SPI enabled)
     spi_enable_ss_output(SPI2);
-
+    gpio_set(GPIOB, GPIO9);
     spi_enable(SPI2);
 }
 /**
