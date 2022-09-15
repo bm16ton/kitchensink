@@ -123,6 +123,10 @@
 
 #define BOOTMAGIC0 0xb007da7a
 #define BOOTMAGIC1 0xbaadfeed
+#define BOOTMAGIC2 0xbaadfeed
+#define BOOTMAGIC3 0xb007da7a
+#define BOOTMAGIC4 0xbeedfaad
+#define BOOTMAGIC5 0xb007da7a
 
 #define TMS_SET_MODE() \
 	gpio_mode_setup(TMS_PORT, GPIO_MODE_OUTPUT, \
@@ -180,6 +184,7 @@ static inline int platform_hwversion(void)
 	return 0;
 }
 
+void platform_request_boot2(void);
 /*
  * Use newlib provided integer only stdio functions
  */

@@ -25,6 +25,7 @@
 #include <libopencm3/cm3/systick.h>
 #include <libopencm3/cm3/nvic.h>
 #include <libopencm3/stm32/rcc.h>
+#include <libopencm3/cm3/scb.h>
 #include "platform.h"
 
 //#include "systime.h"
@@ -33,14 +34,14 @@
 #endif
 volatile uint32_t systick_ms;
 static uint32_t cpufreq = 1;
-
+uint8_t shutdown = 0;
 
 uint8_t running_status;
 static volatile uint32_t time_ms;
 uint32_t swd_delay_cnt = 0;
 
 //static int morse_tick;
-
+extern char _ebss[];
 
 static uint64_t sys_tick_counter;
 
@@ -77,16 +78,28 @@ void platform_delay(uint32_t ms)
 	while (!platform_timeout_is_expired(&timeout));
 }
 
+void setpwoff(void) {
+    shutdown = 1;
+}
+
 void sys_tick_handler(void)
 {
+uint32_t *magic = (uint32_t *)&_ebss;
     systick_ms++;
-/*    if (systick_ms % 2000 == 0) {
-//  millis_count++;
-	lcdshow();
+/*    if (systick_ms % 14000 == 0) {
+        if (shutdown == 1) {
+        magic[0] = BOOTMAGIC0;
+	    magic[1] = BOOTMAGIC1;
+	    scb_reset_system();
+        platform_request_boot2();
+        }
+   
+//	lcdshow();
 	systick_ms = 0;
+	
 //	gpio_toggle(GPIOC, GPIO13);
 	}
-    */
+ */
 	time_ms += SYSTICKMS;
     sys_tick_counter += 1000;
 }

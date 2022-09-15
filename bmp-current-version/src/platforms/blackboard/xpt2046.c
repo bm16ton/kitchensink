@@ -6,6 +6,10 @@
 #include <stdlib.h>
 #include <xpt2046.h>
 
+#define Z_THRESHOLD     300
+#define Z_THRESHOLD_INT	75
+#define MSEC_THRESHOLD  3
+
 void ts_spi_setup(void) {
 
     gpio_mode_setup(TS_SPI_PORT, GPIO_MODE_AF, GPIO_PUPD_NONE,
@@ -32,6 +36,22 @@ void ts_spi_setup(void) {
     spi_enable(TS_SPI);
 }
 
+
+int16_t threshholdv(void) {
+int16_t z;
+int16_t z1;
+int16_t z2;
+
+ts_get_data16(0xB1);
+z1 = ts_get_data16(0xC1) >> 3;
+z = z1 + 4095;
+z2 = ts_get_data16(0x91) >> 3;
+z -= z2;
+
+return z;
+  
+}
+    
 void tscson(void) {
     ST_CS_IDLE;
     TS_CS_ACTIVE;
@@ -43,10 +63,14 @@ void tscsoff(void) {
     gpio_clear(GPIOB, GPIO12);
 }
 
+void throwaway(uint8_t command) {
+spi_xfer(TS_SPI, command);
+}
+
 uint16_t ts_get_data16(uint8_t command) {
     tscson();
-    spi_xfer(TS_SPI, command);
     spi_set_baudrate_prescaler(SPI2, SPI_CR1_BR_FPCLK_DIV_16);
+    spi_xfer(TS_SPI, command);
     uint16_t res1 = spi_xfer(TS_SPI, 0x00);
     uint16_t res2 = spi_xfer(TS_SPI, 0x00);
     spi_set_baudrate_prescaler(SPI2, SPI_CR1_BR_FPCLK_DIV_2);
@@ -59,7 +83,7 @@ uint16_t ts_get_data16(uint8_t command) {
 uint16_t ts_get_x_raw(void) {
     int16_t res = 0;
     for (uint8_t i = 0; i < TS_EVAL_COUNT; i++) {
-        res += ts_get_data16(TS_COMM_X_DPOS);
+        res += ts_get_data16(TS_COMM_X_SPOS);
     }
     return res / TS_EVAL_COUNT;
 }
@@ -67,7 +91,7 @@ uint16_t ts_get_x_raw(void) {
 uint16_t ts_get_y_raw(void) {
     int16_t res = 0;
     for (uint8_t i = 0; i < TS_EVAL_COUNT; i++) {
-        res += ts_get_data16(TS_COMM_Y_DPOS);
+        res += ts_get_data16(TS_COMM_Y_SPOS);
     }
     return res / TS_EVAL_COUNT;
 }

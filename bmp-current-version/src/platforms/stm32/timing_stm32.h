@@ -29,7 +29,7 @@ void lcdshow(void);
 
 
 void systime_setup(uint32_t cpufreq_kHz);
-
+void setpwoff(void);
 void delay(uint32_t delay);
 uint32_t millis(void);
 void milli_sleep(uint32_t delay);

@@ -31,7 +31,7 @@
 #define TS_COMM_Z2_POS    (TS_MODE12 | TS_SB | TS_A2)
 #define TS_COMM_TEMP      (TS_MODE12 | TS_SB)
 
-#define TS_EVAL_COUNT 2
+#define TS_EVAL_COUNT 3
 
 #define TS_X_MIN_EDGE 128
 #define TS_X_MAX_EDGE 1904
@@ -43,6 +43,7 @@
 #define TS_Y_SCREEN_MIN 0
 #define TS_Y_SCREEN_MAX 479
 
+int16_t threshholdv(void);
 void ts_spi_setup(void);
 uint16_t ts_get_data16(uint8_t command);
 uint16_t ts_get_x_raw(void);

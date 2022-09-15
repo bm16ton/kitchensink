@@ -33,7 +33,7 @@
 #include <usb_adc.h>
 #include <altusb.h>
 #include <u8x8.h>
-
+#include <setjmp.h>
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/cm3/scb.h>
 #include <libopencm3/cm3/nvic.h>
@@ -48,11 +48,13 @@
 #include <libopencm3/stm32/gpio.h>
 #include <libopencm3/stm32/adc.h>
 #include <libopencm3/stm32/i2c.h>
+#include <libopencm3/stm32/iwdg.h>
 #include <librfn/fibre.h>
 #include <librfn/time.h>
 #include <librfn/util.h>
 //#include "systime.h"
 #include "xpt2046.h"
+
 #include "ws2812_spi.h"
 #include "timing_stm32.h"
 #include "st7789_stm32_spi.h"
@@ -72,10 +74,13 @@
 #define IRQ_TYPE_LEVEL_HIGH	0x00000004
 #define IRQ_TYPE_LEVEL_LOW	0x00000008
 
+void adcboot(void);
+void platform_request_boot2(void);
 int usbmode;
 void neopixel_init(void);
 void adc_init(void);
 static void tsirq_pin_init(void);
+//int tsxor = 1;
 
 static char ret2[] = "0.0V";
 int adcrun = 0;
@@ -86,6 +91,8 @@ uint8_t usbd_control_buffer[256];
 #define USART_CONSOLE USART1
 
 int _write(int file, char *ptr, int len);
+int _read(int file, char *ptr, int len);
+void get_buffered_line(void);
 static void usart_setup(void);
 
 void platform_init(void)
@@ -117,10 +124,24 @@ void platform_init(void)
 		SYSCFG_MEMRM |= 1;
 		scb_reset_core();
 	}
-	
-		if (!gpio_get(GPIOE, GPIO4))
+/*	
+	if ((magic[0] == BOOTMAGIC4) && (magic[1] == BOOTMAGIC5))
 	{
+
+//	delay(122);
+ //   rcc_peripheral_reset(&RCC_APB1ENR, RCC_APB1RSTR);
+ //   rcc_peripheral_reset(&RCC_AHB2ENR, RCC_APB2RSTR);
+	magic[0] = BOOTMAGIC2;
+	magic[1] = BOOTMAGIC3;
+//	reset_handler();
+	scb_reset_system();
 	
+	}
+*/	
+	if (!gpio_get(GPIOE, GPIO4) || ((magic[0] == BOOTMAGIC2) && (magic[1] == BOOTMAGIC3))) 
+	{
+		magic[0] = 0;
+		magic[1] = 0;
 	rcc_clock_setup_pll(&rcc_hse_8mhz_3v3[RCC_CLOCK_3V3_168MHZ]);
     
     gpio_mode_setup(GPIOA, GPIO_MODE_OUTPUT,
@@ -129,6 +150,7 @@ void platform_init(void)
     SCB_VTOR = (uint32_t) 0x08000000;
 	rcc_periph_clock_enable(RCC_OTGFS);
 	rcc_periph_clock_enable(RCC_CRC);
+	rcc_periph_clock_enable(RCC_USART1);
 //    rcc_periph_clock_enable(RCC_GPIOA);
 	gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE,
 			GPIO11 | GPIO12);
@@ -172,10 +194,19 @@ void platform_init(void)
 //	st_draw_string(10, 50, "white magic probe", ST_COLOR_NAVY, &font_fixedsys_mono_24);
     st_draw_string(10, 69, "usb adc i2c", ST_COLOR_RED, &font_ubuntu_48);
     st_draw_bitmap(352, 192, &bm16ton);
+    st_draw_rectangle(385, 95, 80, 25, ILI9486_RED);
+	st_fill_rect(385, 95, 80, 25, ILI9486_RED);
+	st_draw_string(385, 95, "ADC", ST_COLOR_PURPLE, &font_fixedsys_mono_24);
+	st_draw_rectangle(385, 125, 80, 25, ILI9486_RED);
+	st_fill_rect(385, 125, 80, 25, ILI9486_RED);
+	st_draw_string(385, 125, "BMP", ST_COLOR_YELLOW, &font_fixedsys_mono_24);
+	OTG_FS_GCCFG |= OTG_GCCFG_NOVBUSSENS | OTG_GCCFG_PWRDWN;
+	OTG_FS_GCCFG &= ~(OTG_GCCFG_VBUSBSEN | OTG_GCCFG_VBUSASEN);
+    tsirq_pin_init();
 //    		st_draw_string(10, 120, rcc_get_spi_clk_freq(SPI3), 0xffff, &font_fixedsys_mono_24);
 // 	OTG_FS_GCCFG |= OTG_GCCFG_NOVBUSSENS | OTG_GCCFG_PWRDWN;
 //	OTG_FS_GCCFG &= ~(OTG_GCCFG_VBUSBSEN | OTG_GCCFG_VBUSASEN);
-	
+	printf("Booted BMP\n");
 //	return;
 	} else {
 	rcc_clock_setup_pll(&rcc_hse_8mhz_3v3[RCC_CLOCK_3V3_168MHZ]);
@@ -239,15 +270,20 @@ void platform_init(void)
 	st_draw_string(10, 20, "white magic probe", ST_COLOR_BLACK, &font_ubuntu_48);
 //		st_draw_string(10, 120, ret2, 0xffff, &font_fixedsys_mono_24);
 	// left lines lft/right updwn then rightvlines lft/rght up/dwn 
-//	st_draw_rectangle(40, 15, 80, 25, ILI9486_GREEN);
+	st_draw_rectangle(385, 95, 80, 25, ILI9486_RED);
+	st_fill_rect(385, 95, 80, 25, ILI9486_RED);
+	st_draw_string(385, 95, "ADC", ST_COLOR_YELLOW, &font_fixedsys_mono_24);
+	st_draw_rectangle(385, 125, 80, 25, ILI9486_RED);
+	st_fill_rect(385, 125, 80, 25, ILI9486_RED);
+	st_draw_string(385, 125, "BMP", ST_COLOR_PURPLE, &font_fixedsys_mono_24);
 //	st_fill_screen(ST_COLOR_YELLOW);
     tsirq_pin_init();
-	sspeed = rcc_get_spi_clk_freq(SPI1);
-	sspeed2 = rcc_get_spi_clk_freq(SPI2);
+//	sspeed = rcc_get_spi_clk_freq(SPI1);
+//	sspeed2 = rcc_get_spi_clk_freq(SPI2);
 	OTG_FS_GCCFG |= OTG_GCCFG_NOVBUSSENS | OTG_GCCFG_PWRDWN;
 	OTG_FS_GCCFG &= ~(OTG_GCCFG_VBUSBSEN | OTG_GCCFG_VBUSASEN);
-	printf("spi1 clock speed %d\n", sspeed);
-	printf("spi2 clock speed %d\n", sspeed2);
+	printf("Booted BMP\n");
+//	printf("spi2 clock speed %d\n", sspeed2);
 	}
 }
 
@@ -291,18 +327,21 @@ static void usart_setup(void)
 
 static void tsirq_pin_init(void)
 {
-//    nvic_disable_irq(NVIC_EXTI0_IRQ);
-
 	delay(100);
     nvic_enable_irq(NVIC_EXTI1_IRQ);					
 	gpio_mode_setup(GPIOA, GPIO_MODE_INPUT, GPIO_PUPD_NONE, GPIO1);
-//    gpio_mode_setup(GPIOA, GPIO_MODE_INPUT,
-//					GPIO_PUPD_PULLUP, GPIO3);
-//    gpio_clear(GPIOA, GPIO3);
 	delay(100);
 	exti_select_source(EXTI1, GPIO1);
     exti_set_trigger(EXTI1, IRQ_TYPE_EDGE_FALLING);
 	exti_enable_request(EXTI1);
+}
+
+void wdg(void) {
+            uint32_t *magic = (uint32_t *)&_ebss;
+            magic[0] = BOOTMAGIC2;
+	        magic[1] = BOOTMAGIC3;
+//	        iwdg_set_period_ms(2000);
+	        iwdg_start();
 }
 
 void exti1_isr(void)
@@ -310,16 +349,70 @@ void exti1_isr(void)
 //	exti_reset_request(EXTI1);
     volatile int xrw;
     volatile int yrw;
+    volatile int xraw;
+    volatile int yraw;
+    volatile int16_t thr;
+//    volatile int zraw1;
+//    volatile int zraw2;
+
+    uint32_t *magic = (uint32_t *)&_ebss;
+    xrw = ts_get_x();
+    yrw = ts_get_y();
+    thr = threshholdv();
+    xraw = ts_get_x_raw();
+
+    yraw = ts_get_y_raw();
+    printf("threshhold =  %d\n", thr);
+    printf("xraw =  %d\n", xraw);
+    printf("yraw =  %d\n", yraw);
+    printf("xrw =  %d\n", xrw);
+    printf("yrw =  %d\n", yrw);
+//    zraw1 = ts_get_z1_raw();
+//    zraw2 = ts_get_z2_raw();
     
-    xrw = ts_get_x_raw();
-    yrw = ts_get_y_raw();
-    printf("xraw =  %d\n", xrw);
-    printf("yraw =  %d\n", yrw);
-//    delay(100);
-	for (unsigned i = 0; i < 8000; i++)
-	  {
-		__asm__("nop");
-	  }
+
+    if ((xraw >= 700 && xraw <= 800 ) && (yraw >= 400 && yraw <= 550)) {
+//            exti_disable_request(EXTI1);
+//            usart_disable(USART_CONSOLE);
+//        	rcc_periph_clock_disable(RCC_USART1);
+//	gpio_clear(GPIOA, GPIO9);
+//        	GPIOA_MODER |= (0x00000000);
+         
+//            exti_reset_request(EXTI1);
+//           nvic_disable_irq(NVIC_EXTI1_IRQ);
+//	cm_disable_interrupts();
+	
+//	usart_disable(USART_CONSOLE);
+//	rcc_periph_clock_disable(RCC_USART1);
+//	gpio_clear(GPIOA, GPIO9);
+//	GPIOA_MODER |= (0x00000000);
+           magic[0] = BOOTMAGIC2;
+           magic[1] = BOOTMAGIC3;
+//	        setpwoff();
+//	        return;
+//	        rcc_periph_clock_disable(RCC_USART1);
+//	        rcc_periph_clock_disable(SPI2_BASE);
+	        GPIOA_MODER |= (0x00000000);
+//	        GPIOB_MODER |= (0x00000000);
+            scb_reset_system();
+            scb_reset_core();
+//            platform_request_boot2();
+           
+ //           wdg();
+            return;
+          
+    }
+    if ((xraw >= 850 && xraw <= 980 ) && (yraw >= 350 && yraw <= 450)) {
+            scb_reset_system();
+            platform_request_boot2();
+    }
+//    printf("x coord =  %d\n", xrw);
+//    printf("y coord =  %d\n", yrw);
+//    printf("xraw =  %d\n", xraw);
+//    printf("yraw =  %d\n", yraw);
+   
+ 
+
     exti_reset_request(EXTI1);
     exti_set_trigger(EXTI1, IRQ_TYPE_EDGE_FALLING);
 }
@@ -369,6 +462,31 @@ const char *platform_target_voltage(void)
 	return ret;
 }
 
+
+void platform_request_boot2(void)
+{
+	uint32_t *magic = (uint32_t *)&_ebss;
+	st_fill_screen(ILI9486_GREEN);
+//	st_draw_string_withbg(90, 110, "DFU FIRMWARE UPGRADE", ST_COLOR_RED, ST_COLOR_WHITE, &font_fixedsys_mono_24);
+	usart_disable(USART_CONSOLE);
+	rcc_periph_clock_disable(RCC_USART1);
+	rcc_periph_clock_disable(RCC_USART3);
+    cm_disable_interrupts();
+	usart_disable(USART_CONSOLE);
+//	rcc_periph_clock_disable(SPI2);
+//	gpio_clear(GPIOA, GPIO9);
+	GPIOA_MODER |= (0x00000000);
+	GPIOB_MODER |= (0x00000000);
+	GPIOC_MODER |= (0x00000000);
+	GPIOD_MODER |= (0x00000000);
+	delay(122);
+	magic[0] = BOOTMAGIC2;
+	magic[1] = BOOTMAGIC3;
+	scb_reset_system();
+//	POO = (0x5FA << 16) |
+//	SCB_AIRCR_SYSRESETREQ;
+//	    while (1==1);
+}
 
 void platform_request_boot(void)
 {

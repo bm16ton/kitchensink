@@ -23,8 +23,8 @@
 #define GPIO2_PIN    GPIO2
 #define GPIO3_PORT   GPIOB       //BTN
 #define GPIO3_PIN    GPIO14       //BTN
-#define GPIO4_PORT   GPIOB
-#define GPIO4_PIN    GPIO12
+#define GPIO4_PORT   GPIOD
+#define GPIO4_PIN    GPIO1
 #define GPIO5_PORT   GPIOA
 #define GPIO5_PIN    GPIO4
 #define GPIO6_PORT

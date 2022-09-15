@@ -48,6 +48,7 @@ void adc_start(void)
 	adc_power_off(ADC1);
 	adc_disable_scan_mode(ADC1);
 	adc_set_sample_time_on_all_channels(ADC1, ADC_SMPR_SMP_3CYC);
+	adc_set_resolution(ADC1, 12);
     adc_set_single_conversion_mode(ADC1);
     adc_set_right_aligned(ADC1);
 	adc_power_on(ADC1);
