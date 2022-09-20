@@ -19,7 +19,8 @@
 #
 
 VPATH += platforms/common
-CFLAGS += -Iplatforms/common -Iinclude
+VPATH += platforms/blackboard
+CFLAGS += -Iplatforms/common -Iinclude -Iplatforms/blackboard
 
 SRC +=             \
 	jtagtap.c      \
@@ -34,7 +35,7 @@ SRC +=             \
     pwm.c \
     usb_adc.c \
 
-
+    
 ifeq ($(STLINKV3), 1)
 SRC += stlinkv3.c \
 

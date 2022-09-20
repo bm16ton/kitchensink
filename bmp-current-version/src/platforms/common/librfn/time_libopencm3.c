@@ -16,8 +16,6 @@
 #include <libopencm3/cm3/nvic.h>
 #include <libopencm3/cm3/systick.h>
 
-#define F_CPU 168000000
-
 #ifndef F_CPU
 #error F_CPU is not defined
 #endif

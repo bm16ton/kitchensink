@@ -21,6 +21,7 @@
 #include "morse.h"
 #include <assert.h>
 #include <string.h>
+#include <libopencm3/stm32/i2c.h>
 #include <libopencm3/stm32/gpio.h>
 #include <libopencm3/cm3/systick.h>
 #include <libopencm3/cm3/nvic.h>
@@ -39,7 +40,7 @@ uint8_t shutdown = 0;
 uint8_t running_status;
 static volatile uint32_t time_ms;
 uint32_t swd_delay_cnt = 0;
-
+uint8_t seesaw;
 //static int morse_tick;
 extern char _ebss[];
 
@@ -86,20 +87,24 @@ void sys_tick_handler(void)
 {
 uint32_t *magic = (uint32_t *)&_ebss;
     systick_ms++;
-/*    if (systick_ms % 14000 == 0) {
-        if (shutdown == 1) {
-        magic[0] = BOOTMAGIC0;
-	    magic[1] = BOOTMAGIC1;
-	    scb_reset_system();
-        platform_request_boot2();
-        }
-   
+/*    
+    if (systick_ms % 14000 == 0) {
+        if (seesaw == 1) {
+    uint8_t pwmon[] = { 0x08, 0x01, 0x01, 0xff };
+    i2c_transfer7(I2C3, 0x49, pwmon, sizeof(pwmon), 0, 0);
+    seesaw = 0;
+        } else {
+     uint8_t pwmoff[] = { 0x08, 0x01, 0x01, 0x0 };
+     i2c_transfer7(I2C3, 0x49, pwmoff, sizeof(pwmoff), 0, 0);
+     seesaw = 1;
+   }
+  
 //	lcdshow();
 	systick_ms = 0;
 	
 //	gpio_toggle(GPIOC, GPIO13);
 	}
- */
+*/
 	time_ms += SYSTICKMS;
     sys_tick_counter += 1000;
 }

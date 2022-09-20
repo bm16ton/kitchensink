@@ -37,6 +37,8 @@ void milli_sleep(uint32_t delay);
 uint32_t get_time_ms(void);
 uint32_t get_time_us32(void);
 uint64_t get_time_us64(void);
+uint64_t time64_now();
+
 
 void delay_ms(uint32_t delay);
 #endif

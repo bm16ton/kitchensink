@@ -1,4 +1,4 @@
-PROBE_HOST ?= blackpillv2
+PROBE_HOST ?= blackboard
 PLATFORM_DIR = platforms/$(PROBE_HOST)
 VPATH += $(PLATFORM_DIR) target
 ENABLE_DEBUG ?= 1

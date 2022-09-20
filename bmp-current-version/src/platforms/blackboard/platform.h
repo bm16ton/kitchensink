@@ -127,6 +127,8 @@
 #define BOOTMAGIC3 0xb007da7a
 #define BOOTMAGIC4 0xbeedfaad
 #define BOOTMAGIC5 0xb007da7a
+#define BOOTMAGIC6 0xb006faad
+#define BOOTMAGIC7 0xb007d07a
 
 #define TMS_SET_MODE() \
 	gpio_mode_setup(TMS_PORT, GPIO_MODE_OUTPUT, \
@@ -184,7 +186,10 @@ static inline int platform_hwversion(void)
 	return 0;
 }
 
+int _write(int file, char *ptr, int len);
+int _read(int file, char *ptr, int len);
 void platform_request_boot2(void);
+void tsirq_pin_init(void);
 /*
  * Use newlib provided integer only stdio functions
  */
