@@ -121,6 +121,13 @@
 /* For STM32F4 DMA trigger source must be specified */
 #define USBUSART_DMA_TRG DMA_SxCR_CHSEL_4
 
+#define PLATFORM_HAS_SLCAN		1
+#define CAN_APB_FREQUENCY  (54*1000*1000L)
+#define CAN_RX0_IRQ   NVIC_CAN1_RX0_IRQ
+#define CAN_RX0_ISR   can1_rx0_isr
+#define CAN_TX_IRQ    NVIC_CAN1_TX_IRQ
+#define CAN_TX_ISR    can1_tx_isr
+
 #define BOOTMAGIC0 0xb007da7a
 #define BOOTMAGIC1 0xbaadfeed
 #define BOOTMAGIC2 0xbaadfeed
@@ -163,7 +170,8 @@
 #define IRQ_PRI_USBUSART	(2 << 4)
 #define IRQ_PRI_USBUSART_DMA 	(2 << 4)
 #define IRQ_PRI_TRACE		(0 << 4)
-
+#define IRQ_PRI_CAN_RX0			(6 << 4)
+#define IRQ_PRI_CAN_TX			(7 << 4)
 
 #define TRACE_TIM TIM3
 #define TRACE_TIM_CLK_EN() rcc_periph_clock_enable(RCC_TIM3)

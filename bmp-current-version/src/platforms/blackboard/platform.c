@@ -61,8 +61,7 @@
 #include "st7789_stm32_spi.h"
 #include "fonts/font_fixedsys_mono_24.h"
 #include "fonts/pic.h"
-//#include "fonts/badger.h"
-//#include "fonts/img_flag.h"
+
 #include "fonts/bitmap_typedefs.h"
 #include "ILI9486_Defines.h"
 #include "fonts/font_ubuntu_48.h"
@@ -130,16 +129,7 @@ void platform_init(void)
 		SYSCFG_MEMRM |= 1;
 		scb_reset_core();
 	}
-/*	
-	if ((magic[0] == BOOTMAGIC4) && (magic[1] == BOOTMAGIC5))
-	{
-	magic[0] = 0;
-	magic[1] = 0;
-    rcc_periph_clock_enable(RCC_USART1);
-    i2cexplore();
    
-	}
-*/	
 	if (!gpio_get(GPIOE, GPIO4) || ((magic[0] == BOOTMAGIC2) && (magic[1] == BOOTMAGIC3))) 
 	{
 		magic[0] = 0;
@@ -159,7 +149,7 @@ void platform_init(void)
 	gpio_set_af(GPIOA, GPIO_AF10, GPIO11 | GPIO12);
 
     usbmode = 1;
-	/* Set up USB Pins and alternate function*/
+
 	
 	usart_setup();
     i2c_init();
@@ -169,26 +159,14 @@ void platform_init(void)
 	usbgpio_init();
     blackmagic_usb_init(1);
 	
-//	time_init();
-    
-//	clock_setup();
-   
-//	adc_init();
-
-//	irq_pin_init();
-//	pwm_probe();
-//	gpio_clear(GPIOC, GPIO13);
     gpio_clear(GPIOA, GPIO6);
 
 
     
     adc_start();
     neopixel_init();
-	/* prepare the scheduler */
-//	fibre_run(&usb_task);
-
-//	fibre_scheduler_main_loop();
-//    ulib8run2();
+    seesawneoint(24);
+    clearseesaw(24);
     st_init();
           
     st_fill_screen(ST_COLOR_YELLOW);
@@ -209,11 +187,67 @@ void platform_init(void)
 	OTG_FS_GCCFG |= OTG_GCCFG_NOVBUSSENS | OTG_GCCFG_PWRDWN;
 	OTG_FS_GCCFG &= ~(OTG_GCCFG_VBUSBSEN | OTG_GCCFG_VBUSASEN);
     tsirq_pin_init();
-//    		st_draw_string(10, 120, rcc_get_spi_clk_freq(SPI3), 0xffff, &font_fixedsys_mono_24);
-// 	OTG_FS_GCCFG |= OTG_GCCFG_NOVBUSSENS | OTG_GCCFG_PWRDWN;
-//	OTG_FS_GCCFG &= ~(OTG_GCCFG_VBUSBSEN | OTG_GCCFG_VBUSASEN);
+
+ 	OTG_FS_GCCFG |= OTG_GCCFG_NOVBUSSENS | OTG_GCCFG_PWRDWN;
+	OTG_FS_GCCFG &= ~(OTG_GCCFG_VBUSBSEN | OTG_GCCFG_VBUSASEN);
 	printf("Booted BMP\n");
+	neoup(0x18, 0xa, 0xff, 0xc);
+    neodown(0x18, 0x0, 0x0, 0x0);
 //	return;
+	} else if ((magic[0] == BOOTMAGIC6) && (magic[1] == BOOTMAGIC7)) 
+	{
+	rcc_clock_setup_pll(&rcc_hse_8mhz_3v3[RCC_CLOCK_3V3_168MHZ]);
+    magic[0] = 0;
+	magic[1] = 0;
+	/* Enable peripherals */
+	rcc_periph_clock_enable(RCC_OTGFS);
+	rcc_periph_clock_enable(RCC_CRC);
+	rcc_periph_clock_enable(RCC_USART1);
+    usbmode = 3;
+    usart_setup();
+	gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO11 | GPIO12);
+	gpio_set_af(GPIOA, GPIO_AF10, GPIO11 | GPIO12);
+	systime_setup(168000);
+ 	blackmagic_usb_init(2);
+ 	extern void slcan_init();
+    slcan_init();
+	i2c_setup2();
+    adc_init();
+    seesawneoint(24);
+    clearseesaw(24);
+        st_init();
+    delay(10);
+
+    st_fill_screen(ST_COLOR_YELLOW);
+    delay(122);
+
+    st_draw_bitmap(0, 192, &bm16ton);
+	st_draw_string(10, 20, "16TON'S OF SLCAN", ST_COLOR_BLACK, &font_ubuntu_48);
+
+	st_draw_rectangle(385, 95, 80, 25, ILI9486_RED);
+	st_fill_rect(385, 95, 80, 25, ILI9486_RED);
+	st_draw_string(385, 95, "ADC", ST_COLOR_YELLOW, &font_fixedsys_mono_24);
+	st_draw_rectangle(385, 125, 80, 25, ILI9486_RED);
+	st_fill_rect(385, 125, 80, 25, ILI9486_RED);
+	st_draw_string(385, 125, "BMP", ST_COLOR_PURPLE, &font_fixedsys_mono_24);
+	st_draw_rectangle(385, 155, 80, 25, ILI9486_RED);
+	st_fill_rect(385, 155, 80, 25, ILI9486_RED);
+	st_draw_string(385, 155, "i2c_ex", ST_COLOR_YELLOW, &font_fixedsys_mono_24);
+	st_draw_rectangle(385, 185, 80, 25, ILI9486_RED);
+	st_fill_rect(385, 185, 80, 25, ILI9486_RED);
+	st_draw_string(385, 185, "canbus", ST_COLOR_YELLOW, &font_fixedsys_mono_24);
+
+    tsirq_pin_init();
+//	sspeed = rcc_get_spi_clk_freq(SPI1);
+//	sspeed2 = rcc_get_spi_clk_freq(SPI2);
+	OTG_FS_GCCFG |= OTG_GCCFG_NOVBUSSENS | OTG_GCCFG_PWRDWN;
+	OTG_FS_GCCFG &= ~(OTG_GCCFG_VBUSBSEN | OTG_GCCFG_VBUSASEN);
+	printf("Booted BMP\n");
+
+    neoup(0x18, 0xa, 0xff, 0xc);
+    neodown(0x18, 0x0, 0x0, 0x0);
+    neoeveryother(0xff, 0x0, 0xff, 0x0, 0xff, 0x0);
+
 	} else {
 	rcc_clock_setup_pll(&rcc_hse_8mhz_3v3[RCC_CLOCK_3V3_168MHZ]);
 
@@ -242,17 +276,7 @@ void platform_init(void)
 					TDO_PIN);
 	gpio_set_output_options(TDO_PORT, GPIO_OTYPE_PP, GPIO_OSPEED_2MHZ,
 							TDO_PIN | TMS_PIN);
-/*
-	gpio_mode_setup(LED_PORT, GPIO_MODE_OUTPUT,
-					GPIO_PUPD_NONE,
-					LED_IDLE_RUN | LED_ERROR | LED_BOOTLOADER);
 
-	gpio_mode_setup(LED_PORT_UART, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, LED_UART);
-
- */ 
-//    i2c_init();
-//	platform_timing_init();
-//    usbgpio_init();
     
     systime_setup(168000);
  	blackmagic_usb_init(0);
@@ -263,27 +287,15 @@ void platform_init(void)
 
      clearseesaw(24);
 
-//    clearnwrite(0x0, 0x3, 0xff, 0x16, 0x0);
-//    clearnwrite(0x0, 0x6, 0x0, 0xff, 0x0);
-//    clearnwrite(0x0, 0x9, 0xff, 0x16, 0x0);
-//    clearnwrite(0x0, 0xc, 0xff, 0x16, 0x0);
-
-//    adc_start();
-//    neopixel_init();
-//    ulib8run();
     st_init();
     delay(10);
-//    tsirq_pin_init();
+
     st_fill_screen(0xD69A);
     delay(122);
-//    char test;
-//    ret2[0] = (char)rcc_get_spi_clk_freq(SPI3);
-//    st_set_address_window(0, 0, TFT_WIDTH - 1, TFT_HEIGHT - 1);
-//	st_draw_string_withbg(10, 2, "16ton presents", ST_COLOR_YELLOW, ST_COLOR_BLACK, &font_fixedsys_mono_24);
+
     st_draw_bitmap(0, 192, &bm16ton);
 	st_draw_string(10, 20, "white magic probe", ST_COLOR_BLACK, &font_ubuntu_48);
-//		st_draw_string(10, 120, ret2, 0xffff, &font_fixedsys_mono_24);
-	// left lines lft/right updwn then rightvlines lft/rght up/dwn 
+
 	st_draw_rectangle(385, 95, 80, 25, ILI9486_RED);
 	st_fill_rect(385, 95, 80, 25, ILI9486_RED);
 	st_draw_string(385, 95, "ADC", ST_COLOR_YELLOW, &font_fixedsys_mono_24);
@@ -295,15 +307,14 @@ void platform_init(void)
 	st_draw_string(385, 155, "i2c_ex", ST_COLOR_YELLOW, &font_fixedsys_mono_24);
 	st_draw_rectangle(385, 185, 80, 25, ILI9486_RED);
 	st_fill_rect(385, 185, 80, 25, ILI9486_RED);
-	st_draw_string(385, 185, "neo pxl", ST_COLOR_YELLOW, &font_fixedsys_mono_24);
-//	st_fill_screen(ST_COLOR_YELLOW);
+	st_draw_string(385, 185, "can bus", ST_COLOR_YELLOW, &font_fixedsys_mono_24);
+
     tsirq_pin_init();
-//	sspeed = rcc_get_spi_clk_freq(SPI1);
-//	sspeed2 = rcc_get_spi_clk_freq(SPI2);
+
 	OTG_FS_GCCFG |= OTG_GCCFG_NOVBUSSENS | OTG_GCCFG_PWRDWN;
 	OTG_FS_GCCFG &= ~(OTG_GCCFG_VBUSBSEN | OTG_GCCFG_VBUSASEN);
 	printf("Booted BMP\n");
-//	printf("spi2 clock speed %d\n", sspeed2);
+
     neoup(0x18, 0xa, 0xff, 0xc);
     neodown(0x18, 0x0, 0x0, 0x0);
     neoeveryother(0xff, 0x0, 0xff, 0x0, 0xff, 0x0);
@@ -445,16 +456,16 @@ void exti1_isr(void)
     
     if ((xraw >= 500 && xraw <= 600 ) && (yraw >= 2000 && yraw <= 2050)) {
 
- //          magic[0] = BOOTMAGIC4;
-//           magic[1] = BOOTMAGIC5;
+          magic[0] = BOOTMAGIC6;
+          magic[1] = BOOTMAGIC7;
 //st_fill_screen(ILI9486_GREEN);
-//	        GPIOA_MODER |= (0x00000000);
+	        GPIOA_MODER |= (0x00000000);
 
-//            scb_reset_system();
-//            scb_reset_core();
-
+            scb_reset_system();
+            scb_reset_core();
+            return;
 //            return;    , 0x20,  0x01, 0x01, 220, 0, 220, 0, 220, 0, 250, 250, 0, 0x05
-    clearseesaw(24);
+/*    clearseesaw(24);
     uint8_t cmdWrite[] = { 0xe, 0x2, 0x1 };
 	i2c_transfer7(I2C3, I2C_MEMORY_ADDR, cmdWrite, sizeof(cmdWrite), NULL, 0);
   for (uint32_t loop = 0; loop < 100; ++loop) {
@@ -495,31 +506,7 @@ void exti1_isr(void)
 	 for (uint32_t loop = 0; loop < 100; ++loop) {
     __asm__("nop");
     }
-    
-    
-//  }
-/*
-//    uint8_t cmdWrite6[] = { 0xe, 0x5 };
-//	i2c_transfer7(I2C3, I2C_MEMORY_ADDR, cmdWrite6, sizeof(cmdWrite6), NULL, 0);
 
-  uint8_t cmdWrite16[] = { 0xe, 0x4, 0x0, 0x6, 0x0, 0x0, 0xff };
-	i2c_transfer7(I2C3, I2C_MEMORY_ADDR, cmdWrite16, sizeof(cmdWrite16), NULL, 0);
-
-//   uint8_t cmdWrite18[] = { 0xe, 0x5 };
-//	i2c_transfer7(I2C3, I2C_MEMORY_ADDR, cmdWrite18, sizeof(cmdWrite18), NULL, 0);
-
-  uint8_t cmdWrite19[] = { 0xe, 0x4, 0x0, 0x9, 0xff, 0xff, 0x0 };
-	i2c_transfer7(I2C3, I2C_MEMORY_ADDR, cmdWrite19, sizeof(cmdWrite19), NULL, 0);
-  for (uint32_t loop = 0; loop < 100; ++loop) {
-    __asm__("nop");
-  }
-  */
-//    uint8_t cmdWrite20[] = { 0xe, 0x5 };
-//	i2c_transfer7(I2C3, I2C_MEMORY_ADDR, cmdWrite20, sizeof(cmdWrite20), NULL, 0);
- // for (uint32_t loop = 0; loop < 100; ++loop) {
- //   __asm__("nop");
- // }
-/*
    uint8_t cmdWrite21[] = { 0xe, 0x4, 0x0, 0xC, 0x0, 0xff, 0xff };
 	i2c_transfer7(I2C3, I2C_MEMORY_ADDR, cmdWrite21, sizeof(cmdWrite21), NULL, 0);
   for (uint32_t loop = 0; loop < 100; ++loop) {
@@ -542,7 +529,7 @@ void exti1_isr(void)
     __asm__("nop");
   }
   
-  */
+  
   uint8_t cmdWrite25[] = { 0xe, 0x4, 0x0, 0x21, 0xff, 0xff, 0x0 };
 	i2c_transfer7(I2C3, I2C_MEMORY_ADDR, cmdWrite25, sizeof(cmdWrite25), NULL, 0);
  for (uint32_t loop = 0; loop < 100; ++loop) {
@@ -550,7 +537,7 @@ void exti1_isr(void)
   }
     uint8_t cmdWrite26[] = { 0xe, 0x5 };
 	i2c_transfer7(I2C3, I2C_MEMORY_ADDR, cmdWrite14, sizeof(cmdWrite26), NULL, 0);
-
+*/
 
      }
     exti_reset_request(EXTI1);

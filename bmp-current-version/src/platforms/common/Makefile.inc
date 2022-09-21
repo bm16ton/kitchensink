@@ -27,6 +27,7 @@ SRC +=             \
 	swdptap.c       \
 	usb.c          \
 	usb_serial.c   \
+	usb_serial2.c   \
 	usb_dfu_stub.c \
 	usb_i2c.c \
     util.c \

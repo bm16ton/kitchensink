@@ -1,2 +1,1 @@
-/home/maddocks/USB-GPIO/hybrid-usb/skel-wrking-adc-bulk/usb-skeleton.o
-
+/home/maddocks/USB-GPIO/hybrid-usb/git/skel-wrking-adc-bulk/usb-skeleton.o

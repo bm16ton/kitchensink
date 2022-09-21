@@ -26,6 +26,7 @@
 #include "usb_descriptors.h"
 #endif
 #include "usb_descriptors2.h"
+#include "usb_descriptors3.h"
 #ifdef STLINKV3
 #include "stlinkv3.h"
 #endif
@@ -34,6 +35,7 @@
 #include "usb_descriptors4.h"
 #endif
 #include "usb_serial.h"
+
 #include "usb_dfu_stub.h"
 #include "usb_i2c.h"
 #include "usb_gpio.h"
@@ -50,6 +52,9 @@
 #include <libopencm3/usb/dwc/otg_common.h>
 #include <libopencm3/usb/usbd.h>
 #include <libopencm3/cm3/scb.h>
+#include "stm32_slcan.h"
+#include "usb_descriptors3.h"
+#include "usb_serial2.h"
 
 usbd_device *usbdev = NULL;
 uint16_t usb_config;
@@ -105,7 +110,7 @@ void blackmagic_usb_init(int altusb)
 	delay_setup();
 	nvic_set_priority(USB_IRQ, IRQ_PRI_USB);
 	nvic_enable_irq(USB_IRQ);
-	} else {
+	} if (altusb == 1) { 
 	read_serial_number();
 #ifdef BLACKPILLV2
 	usbdev = usbd_init(&otgfs_usb_driver, &dev2, &config2,
@@ -143,8 +148,25 @@ void blackmagic_usb_init(int altusb)
 	nvic_set_priority(USB_IRQ, IRQ_PRI_USB);
 	nvic_enable_irq(USB_IRQ);
 #endif
+    } if (altusb == 2) { 
+   #ifdef BLACKPILLV2
+	usbdev = usbd_init(&otgfs_usb_driver, &dev_desc3, &config3,
+//    usbd_dev = usbd_init(&stm32f107_usb_driver, &dev, &config,
+			usb_strings3, sizeof(usb_strings3)/sizeof(char *),
+			usbd_control_buffer, sizeof(usbd_control_buffer));
+	OTG_FS_GCCFG |= OTG_GCCFG_NOVBUSSENS;
+//    OTG_FS_GUSBCFG |= OTG_GUSBCFG_FDMOD | OTG_GUSBCFG_TRDT_MASK;
+//	OTG_FS_GCCFG |= OTG_GCCFG_NOVBUSSENS | OTG_GCCFG_PWRDWN;
+//	OTG_FS_GCCFG &= ~(OTG_GCCFG_VBUSBSEN | OTG_GCCFG_VBUSASEN);
+//	usbd_register_set_config_callback(usbdev, usb_set_config);
+    usbd_register_set_config_callback(usbdev, usb_serial2_set_config);
+//    usbd_register_set_config_callback(usbdev, slcan_set_config);
+    usbd_register_set_config_callback(usbdev, dfu_set_config);
+	delay_setup();
+	nvic_set_priority(USB_IRQ, IRQ_PRI_USB);
+	nvic_enable_irq(USB_IRQ);
+#endif
     }
-
 }
 
 uint16_t usb_get_config(void)

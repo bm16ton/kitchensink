@@ -155,7 +155,7 @@ const struct usb_interface ifacespb[] = {{
 	.altsetting = iface_sourcesink2,
 	}, {
 	.num_altsetting = 1,
-	.iface_assoc = &dfu_assoc,
+	.iface_assoc = &dfu2_assoc,
 	.altsetting = &dfu2_iface,
 }};
 
@@ -172,7 +172,7 @@ static const struct usb_config_descriptor config2 = {
 	.interface = ifacespb,
 };
 
-static const char *usb2_strings[] = {
+static const char *const usb2_strings[] = {
 	"redfelineninja.org.uk",
 	"i2c-stm32f4-usb",
 	"testbulk",

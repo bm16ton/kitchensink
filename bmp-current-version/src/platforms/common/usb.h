@@ -36,9 +36,12 @@ extern uint16_t usb_config;
 
 #ifndef STLINKV3
 #define CDCACM_GDB_ENDPOINT  1
+#define CDCACM_SLCAN_ENDPOINT 1
 #define CDCACM_UART_ENDPOINT 3
+#define CDCACM3_UART_ENDPOINT 3
 #define GDB_IF_NO  0
 #define UART_IF_NO 2
+#define UART3_IF_NO 2
 #define DFU_IF_NO  4
 #ifdef PLATFORM_HAS_TRACESWO
 #define TRACE_IF_NO      5
@@ -48,6 +51,9 @@ extern uint16_t usb_config;
 #define TOTAL_INTERFACES 5
 #endif
 #endif
+#define CDCACM_SLCAN_ENDPOINT 1
+#define CDCACM_SLCAN_INTERFACE 0
+#define SLCAN_IF_NO  0
 void blackmagic_usb_init(int altusb);
 
 /* Returns current usb configuration, or 0 if not configured. */

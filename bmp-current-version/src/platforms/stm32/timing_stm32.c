@@ -85,7 +85,7 @@ void setpwoff(void) {
 
 void sys_tick_handler(void)
 {
-uint32_t *magic = (uint32_t *)&_ebss;
+//uint32_t *magic = (uint32_t *)&_ebss;
     systick_ms++;
 /*    
     if (systick_ms % 14000 == 0) {

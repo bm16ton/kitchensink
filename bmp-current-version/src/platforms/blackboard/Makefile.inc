@@ -34,6 +34,7 @@ SRC +=               \
     st7789_stm32_spi.c \
     xpt2046.c \
     seesawneo.c \
+    stm32_slcan.c \
     
 ifneq ($(BMP_BOOTLOADER), 1)
 all:	blackmagic.bin

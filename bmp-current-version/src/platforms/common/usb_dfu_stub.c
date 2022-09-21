@@ -46,7 +46,7 @@ static enum usbd_request_return_codes dfu_control_request(usbd_device *const dev
 {
 	(void)dev;
 	/* Is the request for the DFU interface? */
-	if (req->wIndex != DFU_IF_NO)
+	if (req->wIndex != 4)
 		return USBD_REQ_NEXT_CALLBACK;
 
 	switch (req->bRequest) {
