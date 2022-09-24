@@ -10,5 +10,6 @@
 void adc_start(void);
 
 void usbadc_set_config(usbd_device *dev, uint16_t wValue);
+void dma2_setup(void);
 
 #endif

@@ -72,7 +72,7 @@ void dma2_stream0_isr(void) {
     //dma_clear_interrupt_flags(DMA2, DMA_CHANNEL4, DMA_IFCR_CGIF1);
 }
 
-static char ret2[] = "0.0V ";
+
 
 void adc_start(void)
 {
@@ -81,25 +81,24 @@ void adc_start(void)
 #ifdef BLACKPILLV2
 //	gpio_mode_setup(GPIOA, GPIO_MODE_ANALOG, GPIO_PUPD_NONE, GPIO1);
 	gpio_mode_setup(GPIOA, GPIO_MODE_ANALOG, GPIO_PUPD_NONE, GPIO2);
-	rcc_periph_clock_enable(RCC_ADC1);
-	rcc_periph_clock_enable(RCC_ADC2);
-	adc_set_clk_prescale(ADC_CCR_ADCPRE_BY2);
+
 	adc_power_off(ADC1);
-	adc_power_off(ADC2);
-	adc_disable_scan_mode(ADC1);
-//	adc_set_continuous_conversion_mode(ADC1);
-//	adc_set_right_aligned(ADC1);
-	adc_set_sample_time(ADC1, ADC_CHANNEL2, ADC_SMPR_SMP_3CYC);
+//	adc_disable_scan_mode(ADC1);
+	adc_enable_scan_mode(ADC1);
+
+	adc_set_sample_time_on_all_channels(ADC1, ADC_SMPR_SMP_3CYC);
 	adc_set_resolution(ADC1, 12);
-	uint8_t channels[] = {ADC_CHANNEL2};
-	adc_set_multi_mode(ADC_CCR_MULTI_DUAL_INTERLEAVED);
+    adc_set_single_conversion_mode(ADC1);
+//    adc_set_continuous_conversion_mode(ADC1);
+//    adc_set_multi_mode(ADC_CCR_MULTI_DUAL_INTERLEAVED);
+    adc_set_right_aligned(ADC1);
     adc_enable_dma(ADC1);
     adc_set_dma_continue(ADC1);
 	adc_power_on(ADC1);
-	adc_power_on(ADC2);
-//	adc_set_regular_sequence(ADC1, 1, channels);
-//	adc_start_conversion_regular(ADC1);
-//    adc_res[0] = adc_read_regular(ADC1);
+	uint8_t channels[] = {ADC_CHANNEL2};
+	
+    adc_set_regular_sequence(ADC1, 1, channels);
+    
 /*   adc_power_off(ADC1);
     adc_set_clk_prescale(ADC_CCR_ADCPRE_BY2);
     adc_enable_scan_mode(ADC1);
@@ -141,7 +140,6 @@ void adc_start(void)
     gpio_set_mode(GPIOA, GPIO_MODE_INPUT, GPIO_CNF_INPUT_ANALOG, GPIO1);
     uint8_t channels[] = {ADC_CHANNEL1};
     adc_set_regular_sequence(ADC1, 1, channels);
-    adc_start_conversion_regular(ADC1);
 #endif
 }
 
@@ -169,28 +167,30 @@ static void adc_once(void)
 //	uint8_t channel_array[16];
 #ifdef BLACKPILLV2
     char test[32] = {0};
-    static char ret[] = "0.0V ";
-//    gpio_clear(GPIOC, GPIO13);
-//    uint8_t channels[] = {ADC_CHANNEL2};
+    static char ret[] = "0.0V";
+    gpio_clear(GPIOC, GPIO13);
+    uint8_t channels[] = {ADC_CHANNEL2};
 #endif 
 
 #ifdef STLINKV3
 uint8_t channels[] = { ADC_CHANNEL0, };
 #endif
 //	channel_array[0] = {ADC_CHANNEL2};
-	uint8_t channels[] = { ADC_CHANNEL2, };
-	unsigned value;
-
 	adc_set_regular_sequence(ADC1, 1, channels);
 	adc_start_conversion_regular(ADC1);
-	while (!(adc_eoc(ADC1)))
-	;
-//	for (unsigned i = 0; i < 20; i++)
-//	  {
-//		__asm__("nop");
-//	  }
-	value = adc_read_regular(ADC1);
-//    value = adc_res[0];
+    while (!(adc_eoc(ADC1)))
+        ;
+    
+//    test[0] = adc_res[0];
+//    test[1] = adc_res[1];
+//    test[2] = adc_res[2];
+//    st_fill_rect(1, 110, 74, 60, ST_COLOR_YELLOW);
+//    st_draw_string(10, 65, "Target IO", ST_COLOR_DARKGREEN, &font_ubuntu_48);
+//	st_draw_string(10, 110, test, ST_COLOR_RED, &font_ubuntu_48);   
+//     printf("adc_res =  %d\n", adc_res);
+//     printf("test =  %d\n", test);
+    uint32_t value = adc_read_regular(ADC1);
+
 	value *= 3379; /* 3.3 * 1024 == 3379.2 */
 	value += 104858; /* round, 0.05V * 2 ^ 21 == 104857.6 */
 	ret[0] = (value >> 21) + '0';
@@ -198,13 +198,6 @@ uint8_t channels[] = { ADC_CHANNEL0, };
 	value *= 10;
 	ret[2] = (value >> 21) + '0';
 
-    strcpy(ret2, ret);
-//    printf("adc_res 1 and 2 %4lu  %4lu \n", adc_res[0], adc_res[1]);
-//   st_fill_rect(1, 110, 74, 60, ST_COLOR_YELLOW);
-//   st_draw_string(10, 65, "Target IO", ST_COLOR_DARKGREEN, &font_ubuntu_48);
-//	st_draw_string(10, 110, ret, ST_COLOR_RED, &font_ubuntu_48);
-	
-	
     samples[num_samples++] = (uint32_t)ret;
     if (num_samples == SAMPLES_PER_MESSAGE) {
 //        send_samples(ep);
@@ -246,7 +239,7 @@ static void gadget0_ss_in_cb(usbd_device *dev, uint8_t ep)
     adc_once();
 #endif
    
-    uint16_t x = usbd_ep_write_packet(usbdev, ep,&ret2, sizeof(ret2));
+    uint16_t x = usbd_ep_write_packet(usbdev, ep,&samples, sizeof(samples));
     if (x != BULK_EP_MAXPACKET) {
 	;
 	}

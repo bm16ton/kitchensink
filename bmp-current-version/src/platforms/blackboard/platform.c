@@ -162,7 +162,7 @@ void platform_init(void)
     gpio_clear(GPIOA, GPIO6);
 
 
-    
+    dma2_setup();
     adc_start();
     neopixel_init();
     seesawneoint(24);
@@ -183,7 +183,7 @@ void platform_init(void)
 	st_draw_string(385, 125, "BMP", ST_COLOR_YELLOW, &font_fixedsys_mono_24);
 	st_draw_rectangle(385, 155, 80, 25, ILI9486_RED);
 	st_fill_rect(385, 155, 80, 25, ILI9486_RED);
-	st_draw_string(385, 155, "i2c_ex", ST_COLOR_YELLOW, &font_fixedsys_mono_24);
+	st_draw_string(385, 155, "can bus", ST_COLOR_YELLOW, &font_fixedsys_mono_24);
 	OTG_FS_GCCFG |= OTG_GCCFG_NOVBUSSENS | OTG_GCCFG_PWRDWN;
 	OTG_FS_GCCFG &= ~(OTG_GCCFG_VBUSBSEN | OTG_GCCFG_VBUSASEN);
     tsirq_pin_init();
@@ -207,6 +207,14 @@ void platform_init(void)
     usart_setup();
 	gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO11 | GPIO12);
 	gpio_set_af(GPIOA, GPIO_AF10, GPIO11 | GPIO12);
+	#define CAN1_PORT GPIOD
+    #define CAN1_PINS (GPIO0 | GPIO1)
+    #define CAN1_AF 9
+	gpio_mode_setup(CAN1_PORT, GPIO_MODE_AF, GPIO_PUPD_PULLUP, CAN1_PINS);
+	gpio_set_output_options(CAN1_PORT, GPIO_OTYPE_PP, GPIO_OSPEED_2MHZ,
+							CAN1_PINS);
+	gpio_set_af    (CAN1_PORT, CAN1_AF, CAN1_PINS);
+
 	systime_setup(168000);
  	blackmagic_usb_init(2);
  	extern void slcan_init();
@@ -229,13 +237,13 @@ void platform_init(void)
 	st_draw_string(385, 95, "ADC", ST_COLOR_YELLOW, &font_fixedsys_mono_24);
 	st_draw_rectangle(385, 125, 80, 25, ILI9486_RED);
 	st_fill_rect(385, 125, 80, 25, ILI9486_RED);
-	st_draw_string(385, 125, "BMP", ST_COLOR_PURPLE, &font_fixedsys_mono_24);
+	st_draw_string(385, 125, "BMP", ST_COLOR_YELLOW, &font_fixedsys_mono_24);
 	st_draw_rectangle(385, 155, 80, 25, ILI9486_RED);
 	st_fill_rect(385, 155, 80, 25, ILI9486_RED);
 	st_draw_string(385, 155, "i2c_ex", ST_COLOR_YELLOW, &font_fixedsys_mono_24);
 	st_draw_rectangle(385, 185, 80, 25, ILI9486_RED);
 	st_fill_rect(385, 185, 80, 25, ILI9486_RED);
-	st_draw_string(385, 185, "canbus", ST_COLOR_YELLOW, &font_fixedsys_mono_24);
+	st_draw_string(385, 185, "canbus", ST_COLOR_PURPLE, &font_fixedsys_mono_24);
 
     tsirq_pin_init();
 //	sspeed = rcc_get_spi_clk_freq(SPI1);
@@ -317,7 +325,7 @@ void platform_init(void)
 
     neoup(0x18, 0xa, 0xff, 0xc);
     neodown(0x18, 0x0, 0x0, 0x0);
-    neoeveryother(0xff, 0x0, 0xff, 0x0, 0xff, 0x0);
+//    neoeveryother(0xff, 0x0, 0xff, 0x0, 0xff, 0x0);
 	}
 }
 
@@ -584,9 +592,9 @@ const char *platform_target_voltage(void)
 
    strcpy(ret2, ret);
 
-   st_fill_rect(1, 110, 74, 60, ILI9486_LIGHTGREY);
-   st_draw_string(10, 65, "Target IO", ILI9486_DARKGREEN, &font_ubuntu_48);
-	st_draw_string(10, 110, ret2, ST_COLOR_RED, &font_ubuntu_48);
+//   st_fill_rect(1, 110, 74, 60, ILI9486_LIGHTGREY);
+//   st_draw_string(10, 65, "Target IO", ILI9486_DARKGREEN, &font_ubuntu_48);
+//	st_draw_string(10, 110, ret2, ST_COLOR_RED, &font_ubuntu_48);
 	return ret;
 }
 
