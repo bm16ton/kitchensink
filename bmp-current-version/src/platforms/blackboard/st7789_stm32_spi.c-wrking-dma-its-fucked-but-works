@@ -910,12 +910,9 @@ void dma_start(void *tfttx, size_t data_size) {
     // Finally, enable SPI DMA transmit. This call is what actually starts the
     // DMA transfer.
     spi_enable_tx_dma(SPI2);
-	for (unsigned i = 0; i < 40000; i++)
-	  {
-		__asm__("nop");
-	  }
-//    printf("middle of dma_start\n");
-//    printf("middle of dma_start\n");
+    
+    printf("middle of dma_start\n");
+    printf("middle of dma_start\n");
 //    while(DMA_SCR(DMA1, DMA_STREAM4) & DMA_SxCR_EN) {
 //    ;
 //    }

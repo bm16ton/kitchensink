@@ -133,6 +133,7 @@ SOFTWARE.
 	#define ST_RELEASE_WHEN_IDLE
 #endif
 
+//uint16_t tfttx[1024];
 
 #define ST_SPI			SPI2
 #ifdef ST_USE_SPI_DMA
@@ -344,7 +345,8 @@ __attribute__((always_inline)) static inline void _st_write_data_16bit(uint16_t 
  * Used for sendinf start sequence
  */
 void _st_fixed_delay();
-
+void tftdma();
+void dma_start(void *tfttx, size_t data_size);
 /**
  * Set an area for drawing on the display with start row,col and end row,col.
  * User don't need to call it usually, call it only before some functions who don't call it by default.

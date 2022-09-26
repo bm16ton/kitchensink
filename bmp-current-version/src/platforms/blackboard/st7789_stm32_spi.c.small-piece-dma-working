@@ -24,11 +24,9 @@ SOFTWARE.
 #include "ILI9486_Defines.h"
 #include "timing_stm32.h"
 #include "st7789_stm32_spi.h"
-#include <libopencm3/stm32/f4/nvic.h>
 #include "xpt2046.h"
-#include <stdio.h>
 
-#define ST_BUFFER_SIZE_BYTES	1024
+#define ST_BUFFER_SIZE_BYTES	256
 //TFT width and height default global variables
 uint16_t st_tftwidth = 480;
 uint16_t st_tftheight = 320;
@@ -301,7 +299,7 @@ void st_draw_bitmap(uint16_t x, uint16_t y, const tImage *bitmap)
 	#endif
 	ST_DC_DAT;
 
-	#ifndef ST_USE_SPI_DMA
+	#ifdef ST_USE_SPI_DMA
 		uint32_t bytes_to_write = width * height * 2;
 		uint16_t transfer_size = ST_BUFFER_SIZE_BYTES;
 		uint32_t src_start_address = 0;
@@ -309,7 +307,7 @@ void st_draw_bitmap(uint16_t x, uint16_t y, const tImage *bitmap)
 		while (bytes_to_write)
 		{
 			transfer_size = (bytes_to_write < transfer_size) ? bytes_to_write : transfer_size;
-			dma_start((void *)(&bitmap->data[src_start_address]), transfer_size);
+			_st_write_spi_dma((void *)(&bitmap->data[src_start_address]), transfer_size);
 			src_start_address += ST_BUFFER_SIZE_BYTES;
 			bytes_to_write -= transfer_size;
 		}
@@ -347,7 +345,7 @@ void st_fill_color(uint16_t color, uint32_t len)
 	uint8_t color_high = color >> 8;
 	uint8_t color_low = color;
 
-	#ifndef ST_USE_SPI_DMA		
+	#ifdef ST_USE_SPI_DMA		
 		uint8_t disp_buffer[ST_BUFFER_SIZE_BYTES];
 		for (uint16_t i = 0; i < ST_BUFFER_SIZE_BYTES; i = i+2)
 		{
@@ -361,7 +359,7 @@ void st_fill_color(uint16_t color, uint32_t len)
 		while (bytes_to_write)
 		{
 			transfer_size = (bytes_to_write < transfer_size) ? bytes_to_write : transfer_size;
-			dma_start(disp_buffer, transfer_size);
+			_st_write_spi_dma(disp_buffer, transfer_size);
 			bytes_to_write -= transfer_size;
 		}
 
@@ -414,7 +412,7 @@ void st_fill_color_array(uint8_t *color_arr, uint32_t bytes)
 	#endif
 	ST_DC_DAT;
 
-	#ifndef ST_USE_SPI_DMA		
+//	#ifdef ST_USE_SPI_DMA		
 	
 		// len is pixel count. But each pixel is 2 bytes. So, multiply by 2
 		uint32_t bytes_to_write = bytes;
@@ -422,14 +420,16 @@ void st_fill_color_array(uint8_t *color_arr, uint32_t bytes)
 		while (bytes_to_write)
 		{
 			transfer_size = (bytes_to_write < transfer_size) ? bytes_to_write : transfer_size;
-			dma_start(color_arr, transfer_size);
+//			_st_write_spi_dma(color_arr, transfer_size);
+            dma_start(color_arr, transfer_size);
 			bytes_to_write -= transfer_size;
 		}
 
-	#else
+//	#else
 		/*
 		* Here, macros are directly called (instead of inline functions) for performance increase
-		*/
+*/	
+/*	
 		uint32_t len = bytes / 2;
 		uint16_t blocks = (uint16_t)(len / 64); // 64 pixels/block
 		uint8_t  pass_count;
@@ -455,7 +455,7 @@ void st_fill_color_array(uint8_t *color_arr, uint32_t bytes)
 		}
 		
 	#endif
-
+*/
 	#ifdef ST_RELEASE_WHEN_IDLE
 		ST_CS_IDLE;
 	#endif
@@ -848,90 +848,54 @@ static void spi_init(void)
 
 
 void tftdma(void) {
-     rcc_periph_clock_enable(RCC_SYSCFG);
-    rcc_periph_clock_enable(RCC_DMA1);
-	nvic_enable_irq(NVIC_DMA1_STREAM4_IRQ);
 	dma_stream_reset(DMA1, DMA_STREAM4);
-	dma_set_priority(DMA1, DMA_STREAM4, DMA_SxCR_PL_HIGH);
-	dma_set_memory_size(DMA1, DMA_STREAM4, DMA_SxCR_MSIZE_8BIT);
-	dma_set_peripheral_size(DMA1, DMA_STREAM4, DMA_SxCR_PSIZE_8BIT);
+	dma_set_priority(DMA1, DMA_STREAM4, DMA_SxCR_PL_LOW);
+	dma_set_memory_size(DMA1, DMA_STREAM4, DMA_SxCR_MSIZE_16BIT);
+	dma_set_peripheral_size(DMA1, DMA_STREAM4, DMA_SxCR_PSIZE_16BIT);
 	dma_enable_memory_increment_mode(DMA1, DMA_STREAM4);
 	dma_disable_peripheral_increment_mode(DMA1, DMA_STREAM4);
-//	dma_enable_circular_mode(DMA1, DMA_STREAM4);
+	dma_enable_circular_mode(DMA1, DMA_STREAM4);
 	dma_set_transfer_mode(DMA1, DMA_STREAM4, DMA_SxCR_DIR_MEM_TO_PERIPHERAL);
 	dma_set_peripheral_address(DMA1, DMA_STREAM4, (uint32_t) &SPI_DR(SPI2));
-	dma_set_memory_address(DMA1, DMA_STREAM4, (uint32_t) 0);
-	dma_set_number_of_data(DMA1, DMA_STREAM4, 0);
 //	dma_set_memory_address(DMA1, DMA_STREAM4, (uint32_t) tfttx);
-//	dma_set_number_of_data(DMA1, DMA_STREAM4, 1024);
+	dma_set_number_of_data(DMA1, DMA_STREAM4, 1024);
 //	dma_enable_half_transfer_interrupt(DMA1, DMA_STREAM4);
 //	dma_enable_transfer_complete_interrupt(DMA1, DMA_STREAM4);
-	
+	dma_channel_select(DMA1, DMA_STREAM4, DMA_SxCR_CHSEL_0);
 //	dma_enable_stream(DMA1, DMA_STREAM4); 
 //	spi_enable_tx_dma(SPI2);
-//    nvic_enable_irq(NVIC_DMA1_STREAM4_IRQ);
-    dma_enable_transfer_complete_interrupt(DMA1, DMA_STREAM4);
-    dma_channel_select(DMA1, DMA_STREAM4, DMA_SxCR_CHSEL_0);
-    dma_enable_stream(DMA1, DMA_STREAM4);
 }
  
 void dma1_stream4_isr(void) {
-//printf("start of dma irq\n");
-if (dma_get_interrupt_flag(DMA1, DMA_STREAM4, DMA_TCIF)) {
-    dma_clear_interrupt_flags(DMA1, DMA_STREAM4, DMA_TCIF);
-    }
-    while (SPI_SR(SPI2) & SPI_SR_BSY);
-        ;
-
+if (dma_get_interrupt_flag(DMA1, DMA_STREAM4, DMA_LIFCR_CFEIF1)) {
+    dma_clear_interrupt_flags(DMA2, DMA_STREAM4, DMA_LIFCR_CFEIF1);
+//    while (SPI_SR(SPI2) & SPI_SR_BSY) {
+        delay(10);
         // Turn our DMA channel back off, in preparation of the next transfer
         spi_disable_tx_dma(SPI2);
         dma_disable_stream(DMA1, DMA_STREAM4);
         ST_CS_IDLE;
-//printf("end of dma irq\n");        
-    
+        }
+ //   }
 }
-
 
 void dma_start(void *tfttx, size_t data_size) {
     // Note - manipulating the memory address/size of the DMA controller cannot
     // be done while the channel is enabled. Ensure any previous transfer has
     // completed and the channel is disabled before you start another transfer.
     // Tell the DMA controller to start reading memory data from this address
-    
     dma_set_memory_address(DMA1, DMA_STREAM4, (uint32_t) tfttx);
     // Configure the number of bytes to transfer
     dma_set_number_of_data(DMA1, DMA_STREAM4, data_size);
-//    printf("start of dma_start datasize = %d\n", data_size);
+    // Enable the DMA channel.
+	dma_enable_stream(DMA1, DMA_STREAM4); 
     ST_DC_DAT;
     // Since we're manually controlling our register clock, move it low now
 	ST_CS_ACTIVE;
-    // Enable the DMA channel.
-	dma_enable_stream(DMA1, DMA_STREAM4);
+
     // Finally, enable SPI DMA transmit. This call is what actually starts the
     // DMA transfer.
     spi_enable_tx_dma(SPI2);
-	for (unsigned i = 0; i < 40000; i++)
-	  {
-		__asm__("nop");
-	  }
-//    printf("middle of dma_start\n");
-//    printf("middle of dma_start\n");
-//    while(DMA_SCR(DMA1, DMA_STREAM4) & DMA_SxCR_EN) {
-//    ;
-//    }
-    
-//    while (DMA_SNDTR(SPI2, DMA_STREAM4)) {
-//    ;
-//    }
-    
-//    while (SPI_SR(SPI2) & SPI_SR_BSY) {
-//        ;
-//    }
-       
-//       spi_disable_tx_dma(SPI2);
-       dma_disable_stream(DMA1, DMA_STREAM4);
-       ST_CS_IDLE;    
-//     printf("end of dma_start\n");
 }
 
 static void gpio_setup(void)

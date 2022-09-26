@@ -167,6 +167,8 @@ void platform_init(void)
     neopixel_init();
     seesawneoint(24);
     clearseesaw(24);
+    rcc_periph_clock_enable(RCC_DMA1);
+    tftdma();
     st_init();
           
     st_fill_screen(ST_COLOR_YELLOW);
@@ -223,7 +225,10 @@ void platform_init(void)
     adc_init();
     seesawneoint(24);
     clearseesaw(24);
-        st_init();
+    rcc_periph_clock_enable(RCC_DMA1);
+    tftdma();
+    st_init();
+
     delay(10);
 
     st_fill_screen(ST_COLOR_YELLOW);
@@ -294,7 +299,8 @@ void platform_init(void)
     seesawneoint(24);
 
      clearseesaw(24);
-
+    rcc_periph_clock_enable(RCC_DMA1);
+    tftdma();
     st_init();
     delay(10);
 
@@ -592,6 +598,12 @@ const char *platform_target_voltage(void)
 
    strcpy(ret2, ret);
 
+//    for (int i = 0; i < 1024; i++) {
+//        tfttx[i] = i;
+//    }
+
+    // Begin a DMA transfer using that data
+//    dma_start(tfttx, 1024);
 //   st_fill_rect(1, 110, 74, 60, ILI9486_LIGHTGREY);
 //   st_draw_string(10, 65, "Target IO", ILI9486_DARKGREEN, &font_ubuntu_48);
 //	st_draw_string(10, 110, ret2, ST_COLOR_RED, &font_ubuntu_48);
