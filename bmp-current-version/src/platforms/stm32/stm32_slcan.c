@@ -268,7 +268,7 @@ void CAN_TX_ISR(void) {
 	}
 	__asm__ volatile ("cpsie i; isb");
 #else
-	count_out = usbd_ep_read_packet(usbdev, CDCACM_GDB_ENDPOINT,
+	count_out = usbd_ep_read_packet(usbdev, CDCACM_SLCAN_ENDPOINT,
 									buffer_out, CDCACM_PACKET_SIZE);
 #endif
 	uint32_t tx_status = CAN_TSR(CAN1);

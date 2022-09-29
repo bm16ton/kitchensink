@@ -69,6 +69,11 @@
 
 #include "seesawneo.h"
 
+#include "include/nrf24l01_regs.h"
+#include "include/nrf24l01_hw.h"
+#include "include/nrf24l01.h"
+
+
 #define IRQ_TYPE_NONE		0
 #define IRQ_TYPE_EDGE_RISING	0x00000001
 #define IRQ_TYPE_EDGE_FALLING	0x00000002
@@ -84,6 +89,9 @@ void platform_request_boot2(void);
 int usbmode;
 void neopixel_init(void);
 void adc_init(void);
+
+void nrf_dump_regs(nrf_regs *r);
+
 //void tsirq_pin_init(void);
 //int tsxor = 1;
 volatile int seesaw = 0;
@@ -95,14 +103,39 @@ uint8_t usbd_control_buffer[256];
 
 #define USART_CONSOLE USART1
 
+#define FW_ADDR    0x08080000
 
 void get_buffered_line(void);
 static void usart_setup(void);
+
+
+
+static inline __attribute__((always_inline)) void __set_MSP(uint32_t topOfMainStack)
+{
+  __asm volatile ("MSR msp, %0" : : "r" (topOfMainStack) : );
+}
+
+static inline __attribute__((always_inline)) void bootjump(void) {
+    SCB_VTOR = FW_ADDR;
+    __set_MSP(*(volatile uint32_t *)FW_ADDR);
+	void (*start)(void) = (void *)*(volatile uint32_t *)(FW_ADDR + 4);
+    start();
+}
 
 void platform_init(void)
 {
 	volatile uint32_t *magic = (uint32_t *)_ebss;
 	/* Enable GPIO peripherals */
+	if ((magic[0] == BOOTMAGIC6) && (magic[1] == BOOTMAGIC7)) 
+	{
+//	rcc_clock_setup_pll(&rcc_hse_8mhz_3v3[RCC_CLOCK_3V3_168MHZ]);
+    magic[0] = 0;
+	magic[1] = 0;
+	/* Enable peripherals */
+	
+	    //FW_ADDR has to be aligned to 0x100
+    bootjump();
+    }
 	rcc_periph_clock_enable(RCC_GPIOA);
 	rcc_periph_clock_enable(RCC_GPIOB);
 	rcc_periph_clock_enable(RCC_GPIOC);
@@ -202,6 +235,11 @@ void platform_init(void)
     magic[0] = 0;
 	magic[1] = 0;
 	/* Enable peripherals */
+	
+	    //FW_ADDR has to be aligned to 0x100
+    bootjump();
+    
+    
 	rcc_periph_clock_enable(RCC_OTGFS);
 	rcc_periph_clock_enable(RCC_CRC);
 	rcc_periph_clock_enable(RCC_USART1);
@@ -212,10 +250,12 @@ void platform_init(void)
 	#define CAN1_PORT GPIOD
     #define CAN1_PINS (GPIO0 | GPIO1)
     #define CAN1_AF 9
-	gpio_mode_setup(CAN1_PORT, GPIO_MODE_AF, GPIO_PUPD_PULLUP, CAN1_PINS);
+	gpio_mode_setup(CAN1_PORT, GPIO_MODE_AF, GPIO_PUPD_NONE, CAN1_PINS);
 	gpio_set_output_options(CAN1_PORT, GPIO_OTYPE_PP, GPIO_OSPEED_2MHZ,
 							CAN1_PINS);
-	gpio_set_af    (CAN1_PORT, CAN1_AF, CAN1_PINS);
+	gpio_set_af(CAN1_PORT, CAN1_AF, CAN1_PINS);
+
+
 
 	systime_setup(168000);
  	blackmagic_usb_init(2);
@@ -259,9 +299,12 @@ void platform_init(void)
 
     neoup(0x18, 0xa, 0xff, 0xc);
     neodown(0x18, 0x0, 0x0, 0x0);
-    neoeveryother(0xff, 0x0, 0xff, 0x0, 0xff, 0x0);
+//    neoeveryother(0xff, 0x0, 0xff, 0x0, 0xff, 0x0);
 
 	} else {
+
+
+
 	rcc_clock_setup_pll(&rcc_hse_8mhz_3v3[RCC_CLOCK_3V3_168MHZ]);
 
 	/* Enable peripherals */
@@ -297,12 +340,45 @@ void platform_init(void)
 	i2c_setup2();
     adc_init();
     seesawneoint(24);
-
+    
      clearseesaw(24);
+//    sendi2cdma();
+    nrf_init();
+    
+    static nrf_reg_buf addr;
+
+    addr.data[0] = 0xE1;
+    addr.data[1] = 0xF0;
+    addr.data[2] = 0XF0;
+    addr.data[3] = 0XF0;
+    addr.data[4] = 0XF0;
+//    gpio_clear(GPIOB, GPIO6);
+    nrf_preset_esb(NRF_MODE_PTX, 70, 32, 3, NRF_RT_DELAY_250, &addr);
+//    gpio_set(GPIOB, GPIO6);
+    delay(1400);
+//    gpio_set(GPIOB, GPIO6);
+//    gpio_clear(GPIOB, GPIO6);
+
+//    gpio_set(GPIOB, GPIO6);
+    delay(100);
+    nrf_payload   p;
+    p.size = 32;
+    p.data[0] = 123;
+//    gpio_set(GPIOB, GPIO6);
+//    gpio_set(GPIOB, GPIO7);
+//    gpio_clear(GPIOB, GPIO7);
+    int ret54 =  nrf_send(&p);
+    delay(200);
+//    int ret54 =  nrf_send_blocking(&p);
+    if (ret54 >= 31) {
+    printf("transmit too small %d\n", ret54);
+    }
+    nrf_dump_regs(&nrf_reg_def);
+    delay(100);
     rcc_periph_clock_enable(RCC_DMA1);
     tftdma();
     st_init();
-    delay(10);
+    delay(100);
 
     st_fill_screen(0xD69A);
     delay(122);
@@ -578,7 +654,7 @@ const char *platform_target_voltage(void)
 	/* On the stlinkv3, the target input voltage is divided by two.
 	 * The ADC is sampling at 12 bit resolution.
 	 * Vref+ input is assumed to be 3.3 volts. */
-	
+
 	static char ret[] = "0.0V";
 	
 	uint8_t channels[] = { ADC_CHANNEL2, };
@@ -650,6 +726,8 @@ void platform_request_boot(void)
 	magic[1] = BOOTMAGIC1;
 	scb_reset_system();
 }
+
+
 
 void neopixel_init(void)
 {
