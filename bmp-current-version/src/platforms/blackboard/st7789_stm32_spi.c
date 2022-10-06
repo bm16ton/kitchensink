@@ -330,6 +330,31 @@ void st_draw_bitmap(uint16_t x, uint16_t y, const tImage *bitmap)
 	#endif
 }
 
+void st_draw_bitmap_nodma(uint16_t x, uint16_t y, const tImage *bitmap)
+{
+	uint16_t width = 0, height = 0;
+	width = bitmap->width;
+	height = bitmap->height;
+	st_set_address_window(x, y, x + width-1, y + height-1);
+
+	#ifdef ST_RELEASE_WHEN_IDLE
+		ST_CS_ACTIVE;
+	#endif
+	ST_DC_DAT;
+
+		uint32_t total_pixels = width * height;
+		for (uint16_t pixels = 0; pixels < total_pixels; pixels++)
+		{
+			ST_WRITE_8BIT((uint8_t)(bitmap->data[2*pixels]));
+			ST_WRITE_8BIT((uint8_t)(bitmap->data[2*pixels + 1]));
+		}
+
+
+
+	#ifdef ST_RELEASE_WHEN_IDLE
+		ST_CS_IDLE;
+	#endif
+}
 
 /**
  * Fills `len` number of pixels with `color`.
@@ -399,7 +424,38 @@ void st_fill_color(uint16_t color, uint32_t len)
 	#endif
 }
 
+void st_fill_color_nodma(uint16_t color, uint32_t len)
+{
+	#ifdef ST_RELEASE_WHEN_IDLE
+		ST_CS_ACTIVE;
+	#endif
+	ST_DC_DAT;
+	uint8_t color_high = color >> 8;
+	uint8_t color_low = color;
+		uint16_t blocks = (uint16_t)(len / 64); // 64 pixels/block
+		uint8_t  pass_count;
 
+		// Write first pixel
+		ST_WRITE_8BIT(color_high); ST_WRITE_8BIT(color_low);
+		len--;
+
+		while(blocks--)
+		{
+			pass_count = 16;
+			while(pass_count--)
+			{
+				ST_WRITE_8BIT(color_high); ST_WRITE_8BIT(color_low); 	ST_WRITE_8BIT(color_high); ST_WRITE_8BIT(color_low); //2
+				ST_WRITE_8BIT(color_high); ST_WRITE_8BIT(color_low); 	ST_WRITE_8BIT(color_high); ST_WRITE_8BIT(color_low); //4
+			}
+		}
+		pass_count = len & 63;
+		while (pass_count--)
+		{
+			// write here the remaining data
+			ST_WRITE_8BIT(color_high); ST_WRITE_8BIT(color_low);
+		}
+		ST_CS_IDLE;
+}
 /**
  * Fills `len` number of pixels with `color`.
  * Call st_set_address_window() before calling this function.
@@ -505,6 +561,11 @@ void st_fill_screen(uint16_t color)
 	st_fill_color(color, (uint32_t)st_tftwidth * (uint32_t)st_tftheight);
 }
 
+void st_fill_screen_nodma(uint16_t color)
+{
+	st_set_address_window(0, 0, st_tftwidth - 1, st_tftheight - 1);
+	st_fill_color_nodma(color, (uint32_t)st_tftwidth * (uint32_t)st_tftheight);
+}
 
 /**
  * Draw a rectangle
@@ -941,8 +1002,8 @@ static void gpio_setup(void)
 
     // TFT Reset pin, pull low for 10uS or more to initiate reset
     // Reset takes up to 120ms
-    gpio_mode_setup(GPIOB, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, ST_RST);
-    gpio_set(GPIOB, ST_RST);
+ //   gpio_mode_setup(GPIOB, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, ST_RST);
+ //   gpio_set(GPIOB, ST_RST);
 
     // TFT A0 - D/C pin, 0:Command 1:Data
     gpio_mode_setup(GPIOB, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, ST_DC);

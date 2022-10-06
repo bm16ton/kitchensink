@@ -143,11 +143,11 @@ SOFTWARE.
 
 #define ST_PORT			GPIOB
 
-#define ST_RST			GPIO13
+#define ST_RST			GPIO3
 #define ST_DC			GPIO1
 #define ST_SDA			GPIO15
 #define ST_MISO			GPIO14
-#define ST_SCL			GPIO10
+#define ST_SCL			GPIO13
 //#define ST_BLK			GPIO14
 // To use Chip Select (CS), uncomment `HAS_CS` above
 #define ST_CS			GPIO12
@@ -347,6 +347,9 @@ __attribute__((always_inline)) static inline void _st_write_data_16bit(uint16_t 
 void _st_fixed_delay();
 void tftdma();
 void dma_start(void *tfttx, size_t data_size);
+void st_fill_screen_nodma(uint16_t color);
+void st_fill_color_nodma(uint16_t color, uint32_t len);
+void st_draw_bitmap_nodma(uint16_t x, uint16_t y, const tImage *bitmap);
 /**
  * Set an area for drawing on the display with start row,col and end row,col.
  * User don't need to call it usually, call it only before some functions who don't call it by default.

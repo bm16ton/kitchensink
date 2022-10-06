@@ -35,9 +35,7 @@ SRC +=               \
     xpt2046.c \
     seesawneo.c \
     stm32_slcan.c \
-    nrf24l01.c \
-    nrf24l01_hw_stm32_default.c \
-    nrf24l01_regs.c \
+
     
 ifneq ($(BMP_BOOTLOADER), 1)
 all:	blackmagic.bin

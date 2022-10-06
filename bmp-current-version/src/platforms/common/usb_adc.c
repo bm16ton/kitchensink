@@ -91,12 +91,12 @@ void adc_start(void)
 //	adc_set_right_aligned(ADC1);
 	adc_set_sample_time(ADC1, ADC_CHANNEL2, ADC_SMPR_SMP_3CYC);
 	adc_set_resolution(ADC1, 12);
-	uint8_t channels[] = {ADC_CHANNEL2};
-	adc_set_multi_mode(ADC_CCR_MULTI_DUAL_INTERLEAVED);
-    adc_enable_dma(ADC1);
-    adc_set_dma_continue(ADC1);
+//	uint8_t channels[] = {ADC_CHANNEL2};
+//	adc_set_multi_mode(ADC_CCR_MULTI_DUAL_INTERLEAVED);
+//    adc_enable_dma(ADC1);
+//    adc_set_dma_continue(ADC1);
 	adc_power_on(ADC1);
-	adc_power_on(ADC2);
+//	adc_power_on(ADC2);
 //	adc_set_regular_sequence(ADC1, 1, channels);
 //	adc_start_conversion_regular(ADC1);
 //    adc_res[0] = adc_read_regular(ADC1);
@@ -168,7 +168,7 @@ static void adc_once(void)
 {
 //	uint8_t channel_array[16];
 #ifdef BLACKPILLV2
-    char test[32] = {0};
+//    char test[32] = {0};
     static char ret[] = "0.0V ";
 //    gpio_clear(GPIOC, GPIO13);
 //    uint8_t channels[] = {ADC_CHANNEL2};

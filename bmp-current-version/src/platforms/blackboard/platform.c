@@ -61,7 +61,7 @@
 #include "st7789_stm32_spi.h"
 #include "fonts/font_fixedsys_mono_24.h"
 #include "fonts/pic.h"
-
+#include "fonts/ext-firm.h"
 #include "fonts/bitmap_typedefs.h"
 #include "ILI9486_Defines.h"
 #include "fonts/font_ubuntu_48.h"
@@ -86,10 +86,11 @@
 static void i2c_setup2(void);
 void adcboot(void);
 void platform_request_boot2(void);
+void platform_request_boot3(void);
 int usbmode;
 void neopixel_init(void);
 void adc_init(void);
-
+uint8_t *i2ctx[256];
 void nrf_dump_regs(nrf_regs *r);
 
 //void tsirq_pin_init(void);
@@ -195,7 +196,7 @@ void platform_init(void)
     gpio_clear(GPIOA, GPIO6);
 
 
-    dma2_setup();
+ //   dma2_setup();
     adc_start();
     neopixel_init();
     seesawneoint(24);
@@ -291,8 +292,7 @@ void platform_init(void)
 	st_draw_string(385, 185, "canbus", ST_COLOR_PURPLE, &font_fixedsys_mono_24);
 
     tsirq_pin_init();
-//	sspeed = rcc_get_spi_clk_freq(SPI1);
-//	sspeed2 = rcc_get_spi_clk_freq(SPI2);
+
 	OTG_FS_GCCFG |= OTG_GCCFG_NOVBUSSENS | OTG_GCCFG_PWRDWN;
 	OTG_FS_GCCFG &= ~(OTG_GCCFG_VBUSBSEN | OTG_GCCFG_VBUSASEN);
 	printf("Booted BMP\n");
@@ -337,43 +337,15 @@ void platform_init(void)
     systime_setup(168000);
  	blackmagic_usb_init(0);
 	usbuart_init();
-	i2c_setup2();
+	i2c_dma_start();
+//	i2c_setup2();
+    i2c2_init();
+//	sendi2ctest();
     adc_init();
     seesawneoint(24);
     
      clearseesaw(24);
-//    sendi2cdma();
-    nrf_init();
-    
-    static nrf_reg_buf addr;
 
-    addr.data[0] = 0xE1;
-    addr.data[1] = 0xF0;
-    addr.data[2] = 0XF0;
-    addr.data[3] = 0XF0;
-    addr.data[4] = 0XF0;
-//    gpio_clear(GPIOB, GPIO6);
-    nrf_preset_esb(NRF_MODE_PTX, 70, 32, 3, NRF_RT_DELAY_250, &addr);
-//    gpio_set(GPIOB, GPIO6);
-    delay(1400);
-//    gpio_set(GPIOB, GPIO6);
-//    gpio_clear(GPIOB, GPIO6);
-
-//    gpio_set(GPIOB, GPIO6);
-    delay(100);
-    nrf_payload   p;
-    p.size = 32;
-    p.data[0] = 123;
-//    gpio_set(GPIOB, GPIO6);
-//    gpio_set(GPIOB, GPIO7);
-//    gpio_clear(GPIOB, GPIO7);
-    int ret54 =  nrf_send(&p);
-    delay(200);
-//    int ret54 =  nrf_send_blocking(&p);
-    if (ret54 >= 31) {
-    printf("transmit too small %d\n", ret54);
-    }
-    nrf_dump_regs(&nrf_reg_def);
     delay(100);
     rcc_periph_clock_enable(RCC_DMA1);
     tftdma();
@@ -406,7 +378,13 @@ void platform_init(void)
 	printf("Booted BMP\n");
 
     neoup(0x18, 0xa, 0xff, 0xc);
-    neodown(0x18, 0x0, 0x0, 0x0);
+    neoeveryother(0x00, 0x09, 0x7D, 0x00, 0x7D, 0x09);
+    neoeveryother(0x00, 0x09, 0x7D, 0x00, 0x7D, 0x09);
+    neoeveryother(0x00, 0x09, 0x7D, 0x00, 0x7D, 0x09);
+    delay(122);
+    neodown(0x18, 0x0, 0x50, 0x0);
+    delay(100);
+    sendi2ctest();
 //    neoeveryother(0xff, 0x0, 0xff, 0x0, 0xff, 0x0);
 	}
 }
@@ -428,31 +406,31 @@ int _write(int file, char *ptr, int len)
 	return -1;
 }
 
-
 static void i2c_setup2(void) {
   // Set alternate functions for the SCL and SDA pins of I2C1. 
 	// GPIO for I2C1 
-//	u8x8_t u8x8_i, *u8x8 = &u8x8_i;
 
-	rcc_periph_clock_enable(RCC_I2C3);
-	gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_PULLUP, GPIO8);
-	gpio_set_output_options(GPIOA, GPIO_OTYPE_OD, GPIO_OSPEED_100MHZ,
-				GPIO8);
-	gpio_set_af(GPIOA, GPIO_AF4, GPIO8);
-	gpio_mode_setup(GPIOC, GPIO_MODE_AF, GPIO_PUPD_PULLUP, GPIO9);
-	gpio_set_output_options(GPIOC, GPIO_OTYPE_OD, GPIO_OSPEED_100MHZ,
-				GPIO9);
-	gpio_set_af(GPIOC, GPIO_AF4, GPIO9);
 
-	i2c_peripheral_disable(I2C3);
-	i2c_set_clock_frequency(I2C3, 30);
-	i2c_set_ccr(I2C3, 30 * 5);
-	i2c_set_trise(I2C3, 30 + 1);
-	i2c_enable_ack(I2C3);
-	i2c_set_own_7bit_slave_address(I2C3, 0x32);
-//	i2c_set_fast_mode(I2C3);
-    i2c_set_standard_mode(I2C3);
-	i2c_peripheral_enable(I2C3);
+	rcc_periph_clock_enable(RCC_I2C2);
+	rcc_periph_clock_enable(RCC_GPIOB);
+	gpio_mode_setup(GPIOB, GPIO_MODE_AF, GPIO_PUPD_PULLUP, GPIO10);
+	gpio_set_output_options(GPIOB, GPIO_OTYPE_OD, GPIO_OSPEED_100MHZ,
+				GPIO10);
+	gpio_set_af(GPIOB, GPIO_AF4, GPIO10);
+	gpio_mode_setup(GPIOB, GPIO_MODE_AF, GPIO_PUPD_PULLUP, GPIO11);
+	gpio_set_output_options(GPIOB, GPIO_OTYPE_OD, GPIO_OSPEED_100MHZ,
+				GPIO11);
+	gpio_set_af(GPIOB, GPIO_AF4, GPIO11);
+
+	i2c_peripheral_disable(I2C2);
+	i2c_set_clock_frequency(I2C2, 30);
+	i2c_set_ccr(I2C2, 30 * 5);
+	i2c_set_trise(I2C2, 30 + 1);
+	i2c_enable_ack(I2C2);
+	i2c_set_own_7bit_slave_address(I2C2, 0x32);
+//	i2c_set_fast_mode(I2C2);
+    i2c_set_standard_mode(I2C2);
+	i2c_peripheral_enable(I2C2);
 
   for (uint32_t loop = 0; loop < 1000000; ++loop) {
     __asm__("nop");
@@ -476,8 +454,6 @@ static void usart_setup(void)
 	usart_set_mode(USART_CONSOLE, USART_MODE_TX_RX);
 	usart_set_parity(USART_CONSOLE, USART_PARITY_NONE);
 	usart_set_flow_control(USART_CONSOLE, USART_FLOWCONTROL_NONE);
-
-	/* Finally enable the USART. */
 	usart_enable(USART_CONSOLE);
 }
 
@@ -496,13 +472,12 @@ void wdg(void) {
             uint32_t *magic = (uint32_t *)&_ebss;
             magic[0] = BOOTMAGIC2;
 	        magic[1] = BOOTMAGIC3;
-//	        iwdg_set_period_ms(2000);
 	        iwdg_start();
 }
 
 void exti1_isr(void)
 {
-//	exti_reset_request(EXTI1);
+
     volatile int xrw;
     volatile int yrw;
     volatile int xraw;
@@ -546,89 +521,21 @@ void exti1_isr(void)
     
     if ((xraw >= 500 && xraw <= 600 ) && (yraw >= 2000 && yraw <= 2050)) {
 
+    st_fill_screen_nodma(0xF0C3);
+//	st_draw_string(10, 20, "EXTERNAL FIRMWARE", ST_COLOR_BLACK, &font_ubuntu_48);
+    st_draw_bitmap_nodma(40, 22, &extfirm);
+
           magic[0] = BOOTMAGIC6;
           magic[1] = BOOTMAGIC7;
 //st_fill_screen(ILI9486_GREEN);
 	        GPIOA_MODER |= (0x00000000);
 
+ //           platform_request_boot3();
             scb_reset_system();
             scb_reset_core();
             return;
-//            return;    , 0x20,  0x01, 0x01, 220, 0, 220, 0, 220, 0, 250, 250, 0, 0x05
-/*    clearseesaw(24);
-    uint8_t cmdWrite[] = { 0xe, 0x2, 0x1 };
-	i2c_transfer7(I2C3, I2C_MEMORY_ADDR, cmdWrite, sizeof(cmdWrite), NULL, 0);
-  for (uint32_t loop = 0; loop < 100; ++loop) {
-    __asm__("nop");
-  }
-    uint8_t cmdWrite1[] = { 0xe, 0x3, 0x0, 0x24 };
-	i2c_transfer7(I2C3, I2C_MEMORY_ADDR, cmdWrite1, sizeof(cmdWrite1), NULL, 0);
-  for (uint32_t loop = 0; loop < 100; ++loop) {
-    __asm__("nop");
-  }
-    uint8_t cmdWrite2[] = { 0xe, 0x1, 0xa };
-	i2c_transfer7(I2C3, I2C_MEMORY_ADDR, cmdWrite2, sizeof(cmdWrite2), NULL, 0);
-  for (uint32_t loop = 0; loop < 100; ++loop) {
-    __asm__("nop");
-  }
-    uint8_t cmdWrite3[] = { 0xe, 0x5 };
-	i2c_transfer7(I2C3, I2C_MEMORY_ADDR, cmdWrite3, sizeof(cmdWrite3), NULL, 0);
-  for (uint32_t loop = 0; loop < 100; ++loop) {
-    __asm__("nop");
-  }
-    uint8_t cmdWrite13[] = { 0xe, 0x5 };
-	i2c_transfer7(I2C3, I2C_MEMORY_ADDR, cmdWrite13, sizeof(cmdWrite13), NULL, 0);
-  for (uint32_t loop = 0; loop < 100; ++loop) {
-    __asm__("nop");
-  }
-  
-  uint8_t cmdWrite4[] = { 0xe, 0x4, 0x0, 0x3, 0x0, 0xff, 0x0 };
-	i2c_transfer7(I2C3, I2C_MEMORY_ADDR, cmdWrite4, sizeof(cmdWrite4), NULL, 0);
- for (uint32_t loop = 0; loop < 100; ++loop) {
-    __asm__("nop");
-  }
-
-    uint8_t cmdWrite14[] = { 0xe, 0x5 };
-	i2c_transfer7(I2C3, I2C_MEMORY_ADDR, cmdWrite14, sizeof(cmdWrite14), NULL, 0);
-
-  uint8_t cmdWrite5[] = { 0xe, 0x4, 0x0, 0x0, 0x0, 0x0, 0x0 };
-	i2c_transfer7(I2C3, I2C_MEMORY_ADDR, cmdWrite5, sizeof(cmdWrite5), NULL, 0);
-	 for (uint32_t loop = 0; loop < 100; ++loop) {
-    __asm__("nop");
-    }
-
-   uint8_t cmdWrite21[] = { 0xe, 0x4, 0x0, 0xC, 0x0, 0xff, 0xff };
-	i2c_transfer7(I2C3, I2C_MEMORY_ADDR, cmdWrite21, sizeof(cmdWrite21), NULL, 0);
-  for (uint32_t loop = 0; loop < 100; ++loop) {
-    __asm__("nop");
-  }
-    uint8_t cmdWrite22[] = { 0xe, 0x5 };
-	i2c_transfer7(I2C3, I2C_MEMORY_ADDR, cmdWrite22, sizeof(cmdWrite22), NULL, 0);
-  for (uint32_t loop = 0; loop < 100; ++loop) {
-    __asm__("nop");
-  }
-   uint8_t cmdWrite23[] = { 0xe, 0x4, 0x0, 0xf, 0xff, 0x0, 0xff };
-	i2c_transfer7(I2C3, I2C_MEMORY_ADDR, cmdWrite23, sizeof(cmdWrite23), NULL, 0);
-  for (uint32_t loop = 0; loop < 100; ++loop) {
-    __asm__("nop");
-  }
-  
-     uint8_t cmdWrite24[] = { 0xe, 0x5 };
-	i2c_transfer7(I2C3, I2C_MEMORY_ADDR, cmdWrite24, sizeof(cmdWrite24), NULL, 0);
-  for (uint32_t loop = 0; loop < 100; ++loop) {
-    __asm__("nop");
-  }
-  
-  
-  uint8_t cmdWrite25[] = { 0xe, 0x4, 0x0, 0x21, 0xff, 0xff, 0x0 };
-	i2c_transfer7(I2C3, I2C_MEMORY_ADDR, cmdWrite25, sizeof(cmdWrite25), NULL, 0);
- for (uint32_t loop = 0; loop < 100; ++loop) {
-    __asm__("nop");
-  }
-    uint8_t cmdWrite26[] = { 0xe, 0x5 };
-	i2c_transfer7(I2C3, I2C_MEMORY_ADDR, cmdWrite14, sizeof(cmdWrite26), NULL, 0);
-*/
-
+ 
+//    platform_request_boot3();
      }
     exti_reset_request(EXTI1);
     exti_set_trigger(EXTI1, IRQ_TYPE_EDGE_FALLING);
@@ -649,12 +556,10 @@ void adc_init(void)
 	adc_power_on(ADC1);
 }
 
+
+
 const char *platform_target_voltage(void)
 {
-	/* On the stlinkv3, the target input voltage is divided by two.
-	 * The ADC is sampling at 12 bit resolution.
-	 * Vref+ input is assumed to be 3.3 volts. */
-
 	static char ret[] = "0.0V";
 	
 	uint8_t channels[] = { ADC_CHANNEL2, };
@@ -674,31 +579,29 @@ const char *platform_target_voltage(void)
 
    strcpy(ret2, ret);
 
-//    for (int i = 0; i < 1024; i++) {
-//        tfttx[i] = i;
-//    }
-
-    // Begin a DMA transfer using that data
-//    dma_start(tfttx, 1024);
-//   st_fill_rect(1, 110, 74, 60, ILI9486_LIGHTGREY);
-//   st_draw_string(10, 65, "Target IO", ILI9486_DARKGREEN, &font_ubuntu_48);
-//	st_draw_string(10, 110, ret2, ST_COLOR_RED, &font_ubuntu_48);
 	return ret;
 }
 
-
+void platform_request_boot3(void)
+{
+	uint32_t *magic = (uint32_t *)&_ebss;
+	GPIOA_MODER |= (0x00000000);
+	delay(122);
+	magic[0] = BOOTMAGIC6;
+	magic[1] = BOOTMAGIC7;
+	scb_reset_system();
+}
+    
 void platform_request_boot2(void)
 {
 	uint32_t *magic = (uint32_t *)&_ebss;
 	st_fill_screen(ILI9486_GREEN);
-//	st_draw_string_withbg(90, 110, "DFU FIRMWARE UPGRADE", ST_COLOR_RED, ST_COLOR_WHITE, &font_fixedsys_mono_24);
 	usart_disable(USART_CONSOLE);
 	rcc_periph_clock_disable(RCC_USART1);
 	rcc_periph_clock_disable(RCC_USART3);
     cm_disable_interrupts();
 	usart_disable(USART_CONSOLE);
-//	rcc_periph_clock_disable(SPI2);
-//	gpio_clear(GPIOA, GPIO9);
+
 	GPIOA_MODER |= (0x00000000);
 	GPIOB_MODER |= (0x00000000);
 	GPIOC_MODER |= (0x00000000);
@@ -707,9 +610,7 @@ void platform_request_boot2(void)
 	magic[0] = BOOTMAGIC2;
 	magic[1] = BOOTMAGIC3;
 	scb_reset_system();
-//	POO = (0x5FA << 16) |
-//	SCB_AIRCR_SYSRESETREQ;
-//	    while (1==1);
+
 }
 
 void platform_request_boot(void)
@@ -728,12 +629,10 @@ void platform_request_boot(void)
 }
 
 
-
+// not used anymore in favor of adafruit seesaw
 void neopixel_init(void)
 {
- //   systime_setup(84000);
-//    systime_setup(84000);
-//	rcc_periph_clock_enable(RCC_GPIOB);
+
 	rcc_periph_clock_enable(RCC_SPI1);
 
 	gpio_mode_setup(GPIOB, GPIO_MODE_AF, GPIO_PUPD_PULLUP, GPIO5);
@@ -743,19 +642,14 @@ void neopixel_init(void)
 	gpio_set_output_options(GPIOB, GPIO_OTYPE_OD, GPIO_OSPEED_25MHZ, GPIO5);
 	ws2812_init(SPI1);
     delay_ms(15);
-//	int h = 0;
-//	while (1) {
-//		h = (h+1) % 360;
+
         if (usbmode == 1) {
 		    ws2812_write_rgb(SPI1, 220, 0, 220);
 		}
 		if (usbmode == 2) {
 		    ws2812_write_rgb(SPI1, 0, 220, 220);
 		}
-//		ws2812_write_hsv(SPI1, 120, 10, 1);
-//		ws2812_write_hsv(SPI1, 120, 10, 1);
-		delay_ms(15);
-//    }
 
+		delay_ms(15);
 }
 

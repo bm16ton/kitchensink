@@ -30,9 +30,6 @@
 
 #include <setjmp.h>
 
-
-
-#define PLATFORM_HAS_TRACESWO
 #define PLATFORM_IDENT "(BlackPillV2) "
 /* Important pin mappings for STM32 implementation:
         * JTAG/SWD

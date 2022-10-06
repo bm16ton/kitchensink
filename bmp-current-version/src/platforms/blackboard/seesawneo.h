@@ -3,9 +3,13 @@
 
 //uint16_t i2ctx[72] = {0};
 
-int i2c_dma_start(uint8_t *tx_buf, int tx_len);
+void i2c_dma_start(void);
 
-void sendi2cdma(void);
+void sendi2cdma(uint8_t *tx_buf, int tx_len);
+
+void sendi2ctest(void);
+
+void i2c2_init(void);
 
 void clearnwrite(uint8_t start, uint8_t start2, uint8_t green, uint8_t red, uint8_t blue);
 
