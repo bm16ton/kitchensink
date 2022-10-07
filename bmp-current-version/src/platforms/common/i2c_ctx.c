@@ -28,6 +28,14 @@
 #include <librfn/regdump.h>
 #include <librfn/time.h>
 #include <librfn/util.h>
+#include "ILI9486_Defines.h"
+#include "st7789_stm32_spi.h"
+#include "fonts/font_fixedsys_mono_24.h"
+//#include "fonts/pic.h"
+#include "fonts/bitmap_typedefs.h"
+#include "ILI9486_Defines.h"
+#include "fonts/font_ubuntu_48.h"
+#include "pos.h"
 
 #define D(x) { #x, x }
 static const regdump_desc_t i2c_sr1_desc[] = { { "I2C_SR1", 0 },
@@ -119,6 +127,87 @@ void i2c_ctx_reset(i2c_ctx_t *c)
 	i2c_peripheral_enable(c->i2c);
 }
 
+int scanon = 0;
+
+void printaddr(uint16_t addre) {
+char wonderwoman[sizeof(addre)];
+
+    if (pos >= 315) {
+        pos = 2;
+        pos2 = pos2 + 18;
+    }
+        
+    if (pos2 >= 310) {
+	    st_fill_rect(1, 123, 340, 195, ILI9486_YELLOW);
+        pos2 = 120;
+        pos = 2;
+    }
+    
+    if (scanon == 0) {
+    sprintf(wonderwoman, "%x", addre);
+    st_draw_string(pos, pos2, "0x", ST_COLOR_DARKGREEN, &font_fixedsys_mono_24);
+    pos = pos + 23;
+    st_draw_string(pos, pos2, wonderwoman, ST_COLOR_DARKGREEN, &font_fixedsys_mono_24);
+    pos = pos + 32;  
+    }
+}      
+
+void printnmvrcv(uint8_t *data) {
+char batman[sizeof(data)];
+uint8_t i;
+    if (pos >= 315) {
+        pos = 2;
+        pos2 = pos2 + 18;
+    }
+        
+    if (pos2 >= 310) {
+	    st_fill_rect(1, 123, 340, 195, ILI9486_YELLOW);
+        pos2 = 120;
+        pos = 2;
+    }
+    
+    for(i =0; i < sizeof(data); i++) {
+    sprintf(batman, "%02x", data[i]);
+//    batman[sizeof(batman)] = '\0';
+    st_draw_string(pos, pos2, "0x", ST_COLOR_BLUE, &font_fixedsys_mono_24);
+    pos = pos + 23;
+    st_draw_string(pos, pos2, batman, ST_COLOR_BLUE, &font_fixedsys_mono_24);
+    pos = pos + 32;   
+        if (pos >= 315) {
+        pos = 2;
+        pos2 = pos2 + 18;
+    }
+        
+    if (pos2 >= 310) {
+	    st_fill_rect(1, 123, 340, 195, ILI9486_YELLOW);
+        pos2 = 120;
+        pos = 2;
+    }
+    }
+}   
+
+void printnmv(uint8_t data) {
+char batman[sizeof(data)];
+
+    if (pos >= 315) {
+        pos = 2;
+        pos2 = pos2 + 18;
+    }
+        
+    if (pos2 >= 310) {
+	    st_fill_rect(1, 123, 340, 195, ILI9486_YELLOW);
+        pos2 = 120;
+        pos = 2;
+    }
+    
+    sprintf(batman, "%x", data);
+//    batman[sizeof(batman)] = '\0';
+    st_draw_string(pos, pos2, "0x", ST_COLOR_RED, &font_fixedsys_mono_24);
+    pos = pos + 23;
+    st_draw_string(pos, pos2, batman, ST_COLOR_RED, &font_fixedsys_mono_24);
+    pos = pos + 32;   
+}   
+
 pt_state_t i2c_ctx_start(i2c_ctx_t *c)
 {
 	PT_BEGIN(&c->leaf);
@@ -141,7 +230,8 @@ pt_state_t i2c_ctx_start(i2c_ctx_t *c)
 pt_state_t i2c_ctx_sendaddr(i2c_ctx_t *c, uint16_t addr,
 				   uint8_t bytes_to_read)
 {
-    gpio_toggle(I2CLED_PORT, LED_I2C);
+//    gpio_toggle(I2CLED_PORT, LED_I2C);
+    printaddr(addr);
 	PT_BEGIN(&c->leaf);
 
 	c->bytes_remaining = bytes_to_read;
@@ -173,7 +263,7 @@ pt_state_t i2c_ctx_sendaddr(i2c_ctx_t *c, uint16_t addr,
 	if (c->bytes_remaining == 1)
 		i2c_send_stop(c->i2c);
 
-    gpio_toggle(I2CLED_PORT, LED_I2C);
+//    gpio_toggle(I2CLED_PORT, LED_I2C);
 	PT_END();
 }
 
@@ -182,6 +272,8 @@ pt_state_t i2c_ctx_senddata(i2c_ctx_t *c, uint8_t data)
 	PT_BEGIN(&c->leaf);
 
 	i2c_send_data(c->i2c, data);
+
+    printnmv(data);
 
 	while (!i2c_ctx_is_timed_out(c) && !(I2C_SR1(c->i2c) & I2C_SR1_BTF))
 		PT_YIELD();
@@ -196,6 +288,7 @@ pt_state_t i2c_ctx_senddata(i2c_ctx_t *c, uint8_t data)
 
 pt_state_t i2c_ctx_getdata(i2c_ctx_t *c, uint8_t *data)
 {
+//    char *drstrange;
 	PT_BEGIN(&c->leaf);
 
 	while (!i2c_ctx_is_timed_out(c) && !(I2C_SR1(c->i2c) & I2C_SR1_RxNE))
@@ -214,7 +307,8 @@ pt_state_t i2c_ctx_getdata(i2c_ctx_t *c, uint8_t *data)
 	}
 
 	*data = i2c_get_data(c->i2c);
-
+//    strcpy(drstrange, data, sizeof(data));
+    printnmvrcv(data);
 	PT_END();
 }
 
@@ -241,6 +335,7 @@ pt_state_t i2c_ctx_stop(i2c_ctx_t *c)
 
 pt_state_t i2c_ctx_detect(i2c_ctx_t *c, i2c_device_map_t *map)
 {
+    scanon = 1;
 	PT_BEGIN(&c->pt);
 
 	memset(map, 0, sizeof(*map));
@@ -263,7 +358,7 @@ pt_state_t i2c_ctx_detect(i2c_ctx_t *c, i2c_device_map_t *map)
 
 		map->devices[c->i / 16] |= 1 << (c->i % 16);
 	}
-
+    scanon = 0;
 	PT_END();
 }
 

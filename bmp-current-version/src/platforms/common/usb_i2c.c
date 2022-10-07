@@ -14,6 +14,15 @@
 #include <librfn/util.h>
 #include <librfm3/i2c_ctx.h>
 
+#include "st7789_stm32_spi.h"
+#include "fonts/font_fixedsys_mono_24.h"
+//#include "fonts/pic.h"
+#include "fonts/bitmap_typedefs.h"
+#include "ILI9486_Defines.h"
+#include "fonts/font_ubuntu_48.h"
+#include "seesawneo.h"
+#include "pos.h"
+
 /* commands from USB, must e.g. match command ids in kernel driver */
 #define CMD_ECHO       0
 #define CMD_GET_FUNC   1
@@ -91,6 +100,15 @@ static uint8_t status = STATUS_IDLE;
 
 uint32_t i2c = I2C1;
 
+int evenodd = 1;
+int oldaddress = 0;
+
+int pos = 2;
+int pos2 = 120;
+unsigned int poo = 2;
+int old = 0;
+int new = 0;
+
 /*!
  * \brief Handle I2C I/O request.
  *
@@ -105,14 +123,34 @@ static int usb_i2c_io(struct usb_setup_data *req, uint8_t *buf, uint16_t *len)
 	uint8_t address = req->wIndex;
 	uint8_t is_read = req->wValue & I2C_M_RD;
 	uint8_t size = req->wLength;
+    i2c_ctx_t ctx;
+    i2c_ctx_init(&ctx, I2C1);
+/*    char buf2[64];
+    char address2[7];
+    char spiderman[8];
+    uint8_t address3 = req->wIndex;
+	
+    	sprintf(address2, "%0x", address);
+	
 
-	i2c_ctx_t ctx;
+	poo = poo + 1;
+	
+	if (poo >= 120) {
+		poo = 3;
+	}
+        
+    if (pos >= 315) {
+        pos = 2;
+        pos2 = pos2 + 18;
+    }
+        
+    if (pos2 >= 310) {
+	    st_fill_rect(1, 123, 340, 195, ILI9486_YELLOW);
+        pos2 = 120;
+        pos = 2;
+    }
+*/
 
-	i2c_ctx_init(&ctx, I2C1);
-
-	/* We can ignore CMD_I2C_BEGIN, the hardware will work out which
-	 * type of start condition to generate.
-	 */
 	PT_CALL(&ctx.leaf, i2c_ctx_start(&ctx));
 	if (ctx.err)
 		goto err;
@@ -123,13 +161,30 @@ static int usb_i2c_io(struct usb_setup_data *req, uint8_t *buf, uint16_t *len)
 	if (ctx.err)
 		goto err;
 
-	/* Perform the transaction */
 	for (int i=0; i<size; i++) {
 		PT_CALL(&ctx.leaf, is_read ? i2c_ctx_getdata(&ctx, buf + i)
 					    : i2c_ctx_senddata(&ctx, buf[i]));
 		if (ctx.err)
 			goto err;
 	}
+	
+/*	if (printf("address2 0 %x \n", address2[0])) {
+	printf("in address2 if  \n");
+	sprintf(spiderman, "%x", (unsigned int)poo);
+	}
+*/	
+
+ /*
+    sprintf(buf2, "buff %0x", (unsigned int)buf);
+    if (printf("buf %d \n", (unsigned int)buf2)) {
+   
+        st_draw_string(pos, pos2, "0x", ST_COLOR_RED, &font_fixedsys_mono_24);
+        pos = pos + 23;
+        st_draw_string(pos, pos2, (char *)spiderman, ST_COLOR_RED, &font_fixedsys_mono_24);
+        pos = pos + 32;
+
+    }
+*/
 
 	/* Stop the transaction if requested and this is a write transaction
 	 * (reads are stopped automatically)
@@ -151,7 +206,38 @@ err:
 	return USBD_REQ_HANDLED;
 }
 
+/*
+static pt_state_t do_i2cdetect(console_t *c)
+{
+	struct {
+		i2c_ctx_t ctx;
+		i2c_device_map_t map;
+	} *s = (void *) &c->scratch.u8[0];
 
+	PT_BEGIN(&c->pt);
+
+	i2c_ctx_init(&s->ctx, i2c);
+	PT_SPAWN(&s->ctx.pt, i2c_ctx_detect(&s->ctx, &s->map));
+
+	fprintf(c->out,
+		"     0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f");
+
+	for (s->ctx.i = 0; s->ctx.i < 0x80; s->ctx.i++) {
+		if ((s->ctx.i & 0xf) == 0) {
+			printf("\n");
+			printf("%02x:", s->ctx.i);
+		}
+
+		if (s->map.devices[s->ctx.i / 16] & 1 << (s->ctx.i % 16))
+			printf(" %02x", s->ctx.i);
+		else
+			printf(" --");
+	}
+	printf("\n");
+
+	PT_END();
+}
+*/
 static enum usbd_request_return_codes usb_control_request(
     usbd_device *dev, struct usb_setup_data *req, uint8_t **buf,
     uint16_t *len,

@@ -585,6 +585,11 @@ const char *platform_target_voltage(void)
 void platform_request_boot3(void)
 {
 	uint32_t *magic = (uint32_t *)&_ebss;
+//	st_fill_screen_nodma(ILI9486_RED);
+//	st_draw_string_withbg(90, 110, "EXTERNAL FIRMWARE", ST_COLOR_BLACK, ST_COLOR_WHITE, &font_fixedsys_mono_24);
+//	usart_disable(USART_CONSOLE);
+//	rcc_periph_clock_disable(RCC_USART1);
+//	gpio_clear(GPIOA, GPIO9);
 	GPIOA_MODER |= (0x00000000);
 	delay(122);
 	magic[0] = BOOTMAGIC6;
@@ -629,7 +634,7 @@ void platform_request_boot(void)
 }
 
 
-// not used anymore in favor of adafruit seesaw
+
 void neopixel_init(void)
 {
 
