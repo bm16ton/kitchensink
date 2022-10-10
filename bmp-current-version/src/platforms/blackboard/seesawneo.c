@@ -8,11 +8,76 @@
 #include <libopencm3/cm3/nvic.h>
 #include "seesawneo.h"
 #include <string.h>
+#include "timing_stm32.h"
+#include <libopencm3/stm32/timer.h>
+
+#define PRESCALE    10000
+#define PERIOD      8400
 
 uint8_t numpix = 24;
+int timvalpoo = 0;
+
+void neotimtest(void);
+void I2C_write(uint8_t SensorAddr, uint8_t * pWriteBuffer, uint16_t NumByteToWrite);
+static void DMA_Transmit(uint8_t * pBuffer, uint8_t size);
+void i2c_dma_start(void);
 
 void I2C_write(uint8_t SensorAddr, uint8_t * pWriteBuffer, uint16_t NumByteToWrite);
 static void DMA_Transmit(uint8_t * pBuffer, uint8_t size);
+
+void tim2_isr(void)
+{
+        if(timer_interrupt_source(TIM2, TIM_SR_UIF)) {
+	        timer_clear_flag(TIM2, TIM_SR_UIF);   // Clear the Interrup Flag
+	        neotimtest();	      // Toggle LED.
+//	        timer_enable_counter(TIM2);
+	}
+}
+
+static void timer2_setup(void)
+{
+	rcc_periph_clock_enable(RCC_TIM2);
+	rcc_periph_reset_pulse(RCC_APB1RSTR_TIM2RST);
+
+	timer_set_mode(TIM2, TIM_CR1_CKD_CK_INT, TIM_CR1_CMS_EDGE, TIM_CR1_DIR_UP);
+	timer_set_prescaler(TIM2, PRESCALE);     // TIM2_PSC = PRESCALE;  
+	timer_set_period(TIM2, PERIOD);          // TIM2_ARR = PERIOD;    Sets the auto-reload reg
+	timer_enable_update_event(TIM2);         // TIM2_CR1.UDIS = 0;
+	timer_update_on_any(TIM2);               // TIM2_CR1.URS = 0;
+	timer_generate_event(TIM2, TIM_EGR_UG);  // TIM2_EGR.UG = 1;
+	timer_enable_irq(TIM2, TIM_DIER_UIE);    // Enable the Interrupt
+	timer_continuous_mode(TIM2);
+	timer_enable_preload(TIM2);
+
+	nvic_enable_irq(NVIC_TIM2_IRQ);          // Enable the Interrupt in the Interrupt Controller
+	timer_enable_counter(TIM2);              // Start the counter.
+}
+
+void neotimodd(void) {
+    timer2_setup();
+//    neotimtest();
+}
+
+void neotimtest(void){
+
+if (timvalpoo == 0) {
+   uint8_t cmdWrite[] = { 0xe, 0x4, 0x0, 0x6, 0xff, 0xff, 0x0 };
+    I2C_write(0x49, cmdWrite, sizeof(cmdWrite));
+    timvalpoo = 1;
+} else if (timvalpoo == 1) {
+    uint8_t cmdWrite4[] = { 0xe, 0x5 };
+    I2C_write(0x49, cmdWrite4, sizeof(cmdWrite4));
+    timvalpoo = 2;
+    } else if (timvalpoo == 2) {
+   uint8_t cmdWrite[] = { 0xe, 0x4, 0x0, 0x6, 0x0, 0x0, 0xff };
+    I2C_write(0x49, cmdWrite, sizeof(cmdWrite));
+    timvalpoo = 3;
+} else if (timvalpoo == 3) {
+    uint8_t cmdWrite4[] = { 0xe, 0x5 };
+    I2C_write(0x49, cmdWrite4, sizeof(cmdWrite4));
+    timvalpoo = 0;
+    }
+}  
 
 void clearnwrite(uint8_t start, uint8_t start2, uint8_t green, uint8_t red, uint8_t blue) {
     clearseesaw(numpix);
@@ -275,6 +340,7 @@ void i2c2_init(void)
 //		i2c_set_dma_last_transfer(I2C2);
 		i2c_enable_dma(I2C2);
 //		I2C_CR2(I2C2) |=16;//set clock source to 16MHz
+//        i2c_set_fast_mode(I2C2);
         i2c_set_clock_frequency(I2C2, 30);
         i2c_set_ccr(I2C2, 30 * 5);
 	    i2c_set_trise(I2C2, 30 + 1);
@@ -327,11 +393,18 @@ void I2C_write(uint8_t SensorAddr,
   /* Read SR2 */
 			(void)I2C2_SR2;
 	
-	for (unsigned i = 0; i < 20000; i++)
-	  {
-		__asm__("nop");
-	  }
+	while (!(I2C_SR1(I2C2) & I2C_SR1_BTF))
+		;
+
+	if (!(I2C_SR1(I2C2) & I2C_SR1_BTF)) {
+		i2c_reset(I2C2);
+	}
 	
+//	for (unsigned i = 0; i < 20000; i++)
+//	  {
+//		__asm__("nop");
+//	  }
+
 	i2c_send_stop(I2C2);
     i2c_clear_stop(I2C2);
 	
@@ -361,9 +434,9 @@ static void DMA_Transmit(uint8_t * pBuffer, uint8_t size)
 
 void dma1_stream7_isr(void) {
 //printf("start of i2c isr\n");
-for (uint32_t loop = 0; loop < 40000; ++loop) {
-    __asm__("nop");
-  }
+//for (uint32_t loop = 0; loop < 40000; ++loop) {
+//    __asm__("nop");
+//  }
 if (dma_get_interrupt_flag(DMA1, DMA_STREAM7, DMA_TCIF)) {
     dma_clear_interrupt_flags(DMA1, DMA_STREAM7, DMA_TCIF);
     }

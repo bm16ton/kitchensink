@@ -32,7 +32,6 @@
 #include <usb_gpio.h>
 #include <usb_adc.h>
 #include <altusb.h>
-#include <u8x8.h>
 #include <setjmp.h>
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/cm3/scb.h>
@@ -385,6 +384,8 @@ void platform_init(void)
     neodown(0x18, 0x0, 0x50, 0x0);
     delay(100);
     sendi2ctest();
+    delay(200);
+    neotimodd();
 //    neoeveryother(0xff, 0x0, 0xff, 0x0, 0xff, 0x0);
 	}
 }

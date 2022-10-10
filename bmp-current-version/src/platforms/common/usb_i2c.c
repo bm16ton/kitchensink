@@ -168,23 +168,7 @@ static int usb_i2c_io(struct usb_setup_data *req, uint8_t *buf, uint16_t *len)
 			goto err;
 	}
 	
-/*	if (printf("address2 0 %x \n", address2[0])) {
-	printf("in address2 if  \n");
-	sprintf(spiderman, "%x", (unsigned int)poo);
-	}
-*/	
 
- /*
-    sprintf(buf2, "buff %0x", (unsigned int)buf);
-    if (printf("buf %d \n", (unsigned int)buf2)) {
-   
-        st_draw_string(pos, pos2, "0x", ST_COLOR_RED, &font_fixedsys_mono_24);
-        pos = pos + 23;
-        st_draw_string(pos, pos2, (char *)spiderman, ST_COLOR_RED, &font_fixedsys_mono_24);
-        pos = pos + 32;
-
-    }
-*/
 
 	/* Stop the transaction if requested and this is a write transaction
 	 * (reads are stopped automatically)

@@ -350,6 +350,8 @@ void dma_start(void *tfttx, size_t data_size);
 void st_fill_screen_nodma(uint16_t color);
 void st_fill_color_nodma(uint16_t color, uint32_t len);
 void st_draw_bitmap_nodma(uint16_t x, uint16_t y, const tImage *bitmap);
+void st_draw_hex_ptr(uint16_t x, uint16_t y, uint8_t *data, uint16_t color, const tFont *font);
+void lcd_draw_char(uint16_t x, uint16_t y, const tFont *font, char c);
 /**
  * Set an area for drawing on the display with start row,col and end row,col.
  * User don't need to call it usually, call it only before some functions who don't call it by default.

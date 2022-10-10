@@ -141,6 +141,27 @@ void _st_render_glyph(uint16_t x, uint16_t y, uint16_t fore_color, uint16_t back
 	}
 }
 
+void lcd_draw_char(uint16_t x, uint16_t y, const tFont *font, char c)
+{
+    uint16_t fore_color = ST_COLOR_WHITE;
+    uint16_t back_color = ST_COLOR_BLACK;
+	const tImage *img = NULL;
+	for (uint8_t i = 0; i < font->length; i++)
+	{
+		if (font->chars[i].code == c)
+		{
+			img = font->chars[i].image;
+			break;
+		}
+	}
+	// No glyph (img) found, so return from this function
+	if (img == NULL)
+	{
+		return;
+	}
+
+		_st_render_glyph(x, y, fore_color, back_color, img, 0);
+}
 
 
 /**
@@ -250,6 +271,17 @@ void st_draw_char(uint16_t x, uint16_t y, char character, uint16_t fore_color, u
 		_st_render_glyph(x, y, fore_color, back_color, img, 0);
 }
 
+void st_draw_hex_ptr(uint16_t x, uint16_t y, uint8_t *data, uint16_t color, const tFont *font) {
+char batman[sizeof(data)];
+uint8_t i;  
+    for(i =0; i < sizeof(data); i++) {
+    sprintf(batman, "%02x", data[i]);
+//    batman[sizeof(batman)] = '\0';
+    st_draw_string(x, y, "0x", color, font);
+
+    st_draw_string(x, y, batman, color, font);
+    }
+}
 
 /**
  * Draws a string on the display with `font` and `color` at given position.

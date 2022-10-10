@@ -227,6 +227,7 @@ pt_state_t i2c_ctx_start(i2c_ctx_t *c)
 	PT_END();
 }
 
+
 pt_state_t i2c_ctx_sendaddr(i2c_ctx_t *c, uint16_t addr,
 				   uint8_t bytes_to_read)
 {
@@ -335,7 +336,7 @@ pt_state_t i2c_ctx_stop(i2c_ctx_t *c)
 
 pt_state_t i2c_ctx_detect(i2c_ctx_t *c, i2c_device_map_t *map)
 {
-    scanon = 1;
+    
 	PT_BEGIN(&c->pt);
 
 	memset(map, 0, sizeof(*map));
@@ -343,7 +344,7 @@ pt_state_t i2c_ctx_detect(i2c_ctx_t *c, i2c_device_map_t *map)
 	for (c->i = 0; c->i < 0x80; c->i++) {
 		c->timeout = time_now() + 10000;
 		c->err = 0;
-
+        scanon = 1;
 		PT_SPAWN(&c->leaf, i2c_ctx_start(c));
 		if (c->err)
 			continue;

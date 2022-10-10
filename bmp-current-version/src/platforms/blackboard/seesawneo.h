@@ -11,6 +11,8 @@ void sendi2ctest(void);
 
 void i2c2_init(void);
 
+void neotimodd(void);
+
 void clearnwrite(uint8_t start, uint8_t start2, uint8_t green, uint8_t red, uint8_t blue);
 
 void neowrite(uint8_t start, uint8_t start2, uint8_t green, uint8_t red, uint8_t blue);
@@ -24,5 +26,9 @@ void neoeveryother(uint8_t green, uint8_t red, uint8_t blue, uint8_t green2, uin
 void neodown(uint8_t pins, uint8_t green, uint8_t red, uint8_t blue);
 
 void neoup(uint8_t pins, uint8_t green, uint8_t red, uint8_t blue);
+
+void neoeven(uint8_t green, uint8_t red, uint8_t blue);
+
+void neoodd(uint8_t green, uint8_t red, uint8_t blue);
 
 #endif

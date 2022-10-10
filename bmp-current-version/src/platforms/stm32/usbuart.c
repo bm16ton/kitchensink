@@ -37,7 +37,8 @@
 #define CDCACM_UART_ENDPOINT CDCACM_UART_ENDPOINT2
 #endif
 #ifdef ENABLE_NEOPIXEL
-#include "ws2812_spi.h"
+//#include "ws2812_spi.h"
+#include "seesawneo.h"
 #endif
 
 #ifdef DMA_STREAM0
@@ -106,7 +107,9 @@ static void usbuart_set_led_state(uint8_t ledn, bool state)
 		led_state |= ledn;
 //		gpio_set(LED_PORT_UART, LED_UART);
 #ifdef ENABLE_NEOPIXEL
-		ws2812_write_rgb(SPI1, 0, 120, 150);
+//		ws2812_write_rgb(SPI1, 0, 120, 150);
+        clearseesaw(24);
+        neoeven(10, 125, 7);
 #else
 		gpio_set(LED_PORT_UART, LED_UART);
 #endif
@@ -117,7 +120,9 @@ static void usbuart_set_led_state(uint8_t ledn, bool state)
 		if (!led_state)
 //			gpio_clear(LED_PORT_UART, LED_UART);
 #ifdef ENABLE_NEOPIXEL
-		ws2812_write_rgb(SPI1, 150, 120, 0);
+//		ws2812_write_rgb(SPI1, 150, 120, 0);
+        clearseesaw(24);
+        neoodd(3, 7, 125);
 #else
 		gpio_clear(LED_PORT_UART, LED_UART);
 #endif
@@ -392,7 +397,9 @@ static void usbuart_send_rx_packet(void)
 		/* Turn off LED */
 //		usbuart_set_led_state(RX_LED_ACT, false);
 #ifdef ENABLE_NEOPIXEL
-		ws2812_write_rgb(SPI1, 0, 10, 150);
+//		ws2812_write_rgb(SPI1, 0, 10, 150);
+        clearseesaw(24);
+        neoeven(0, 10, 150);
 #else
 		gpio_set(LED_PORT_UART, LED_UART);
 #endif

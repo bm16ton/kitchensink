@@ -5,7 +5,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-#include <st7735.h>
+#include <st7789_stm32_spi.h>
 #include <console.h>
 #include <font8x14.h>
 

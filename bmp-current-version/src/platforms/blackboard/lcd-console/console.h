@@ -1,7 +1,7 @@
 
 /* Author, Copyright: Oleg Borodin <onborodin@gmail.com> 2018 */
 
-#include <st7735.h>
+#include <st7789_stm32_spi.h>
 
 #ifndef CONSOLE_H_ITU
 #define CONSOLE_H_ITU
