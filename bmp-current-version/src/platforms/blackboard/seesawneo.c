@@ -18,12 +18,9 @@ uint8_t numpix = 24;
 int timvalpoo = 0;
 
 void neotimtest(void);
-void I2C_write(uint8_t SensorAddr, uint8_t * pWriteBuffer, uint16_t NumByteToWrite);
 static void DMA_Transmit(uint8_t * pBuffer, uint8_t size);
 void i2c_dma_start(void);
 
-void I2C_write(uint8_t SensorAddr, uint8_t * pWriteBuffer, uint16_t NumByteToWrite);
-static void DMA_Transmit(uint8_t * pBuffer, uint8_t size);
 
 void tim2_isr(void)
 {
@@ -158,7 +155,30 @@ if (ii >= write2) {
 //  } 
   
 //}
+void neoodddma(uint8_t green2, uint8_t red2, uint8_t blue2) {
+uint8_t ii;
+uint8_t write2;
+write2 = numpix * 3;
+for (ii = 0; ii < write2; ii += 6) {
+if (ii >= write2) {
+   return;
+   }
+   
+   uint8_t cmdWrite3[] = { 0xe, 0x4, 0x0, ii, green2, red2, blue2 };
+//   i2c_transfer7(I2C2, 0x49, cmdWrite3, sizeof(cmdWrite3), NULL, 0);
+   I2C_write(0x49, cmdWrite3, sizeof(cmdWrite3));
+//  for (uint32_t loop = 0; loop < 100; ++loop) {
+//    __asm__("nop");
+//  }
+ }
+  uint8_t cmdWrite4[] = { 0xe, 0x5 };
+//  i2c_transfer7(I2C2, 0x49, cmdWrite4, sizeof(cmdWrite4), NULL, 0);
+  I2C_write(0x49, cmdWrite4, sizeof(cmdWrite4));
+  for (uint32_t loop = 0; loop < 100; ++loop) {
+    __asm__("nop");
 
+   }  
+}
 
 void neoeveryother(uint8_t green, uint8_t red, uint8_t blue, uint8_t green2, uint8_t red2, uint8_t blue2) {
 uint8_t mloop;
@@ -354,10 +374,10 @@ void sendi2ctest(void){
 
    uint8_t cmdWrite[] = { 0xe, 0x4, 0x0, 0x6, 0xff, 0xff, 0x0 };
     I2C_write(0x49, cmdWrite, sizeof(cmdWrite));
-    for (unsigned i = 0; i < 40000; i++)
-	  {
-		__asm__("nop");
-	  }
+//    for (unsigned i = 0; i < 40000; i++)
+//	  {
+//		__asm__("nop");
+//	  }
 
 
     uint8_t cmdWrite4[] = { 0xe, 0x5 };
@@ -399,11 +419,6 @@ void I2C_write(uint8_t SensorAddr,
 	if (!(I2C_SR1(I2C2) & I2C_SR1_BTF)) {
 		i2c_reset(I2C2);
 	}
-	
-//	for (unsigned i = 0; i < 20000; i++)
-//	  {
-//		__asm__("nop");
-//	  }
 
 	i2c_send_stop(I2C2);
     i2c_clear_stop(I2C2);
@@ -433,10 +448,6 @@ static void DMA_Transmit(uint8_t * pBuffer, uint8_t size)
 }
 
 void dma1_stream7_isr(void) {
-//printf("start of i2c isr\n");
-//for (uint32_t loop = 0; loop < 40000; ++loop) {
-//    __asm__("nop");
-//  }
 if (dma_get_interrupt_flag(DMA1, DMA_STREAM7, DMA_TCIF)) {
     dma_clear_interrupt_flags(DMA1, DMA_STREAM7, DMA_TCIF);
     }

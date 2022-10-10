@@ -11,6 +11,8 @@ void sendi2ctest(void);
 
 void i2c2_init(void);
 
+void I2C_write(uint8_t SensorAddr, uint8_t * pWriteBuffer, uint16_t NumByteToWrite);
+
 void neotimodd(void);
 
 void clearnwrite(uint8_t start, uint8_t start2, uint8_t green, uint8_t red, uint8_t blue);

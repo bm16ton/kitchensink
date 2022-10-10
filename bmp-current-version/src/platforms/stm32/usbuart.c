@@ -108,8 +108,8 @@ static void usbuart_set_led_state(uint8_t ledn, bool state)
 //		gpio_set(LED_PORT_UART, LED_UART);
 #ifdef ENABLE_NEOPIXEL
 //		ws2812_write_rgb(SPI1, 0, 120, 150);
-        clearseesaw(24);
-        neoeven(10, 125, 7);
+//        clearseesaw(24);
+        neoodddma(10, 125, 7);
 #else
 		gpio_set(LED_PORT_UART, LED_UART);
 #endif
@@ -121,8 +121,8 @@ static void usbuart_set_led_state(uint8_t ledn, bool state)
 //			gpio_clear(LED_PORT_UART, LED_UART);
 #ifdef ENABLE_NEOPIXEL
 //		ws2812_write_rgb(SPI1, 150, 120, 0);
-        clearseesaw(24);
-        neoodd(3, 7, 125);
+//        clearseesaw(24);
+        neoodddma(3, 7, 125);
 #else
 		gpio_clear(LED_PORT_UART, LED_UART);
 #endif
