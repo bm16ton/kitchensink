@@ -104,6 +104,9 @@ void blackmagic_usb_init(int altusb)
 #ifdef BLACKPILLV2
     usbd_register_set_config_callback(usbdev, dfu_set_config);
 #endif
+#ifdef GREENPILL
+    usbd_register_set_config_callback(usbdev, dfu_set_config);
+#endif
 #ifdef STLINKV3
     usbd_register_set_config_callback(usbdev, cdcacm_set_config);
 #endif
@@ -124,6 +127,24 @@ void blackmagic_usb_init(int altusb)
 //	usbd_register_set_config_callback(usbdev, usb_set_config);
 	usbd_register_set_config_callback(usbdev, usb_set_config);
 	usbd_register_set_config_callback(usbdev, gpio_set_config);
+	usbd_register_set_config_callback(usbdev, usbadc_set_config);
+    usbd_register_set_config_callback(usbdev, dfu_set_config2);
+	delay_setup();
+	nvic_set_priority(USB_IRQ, IRQ_PRI_USB);
+	nvic_enable_irq(USB_IRQ);
+#endif
+#ifdef GREENPILL
+	usbdev = usbd_init(&otgfs_usb_driver, &dev2, &config2,
+//    usbd_dev = usbd_init(&stm32f107_usb_driver, &dev, &config,
+			usb2_strings, sizeof(usb2_strings)/sizeof(char *),
+			usbd_control_buffer, sizeof(usbd_control_buffer));
+	OTG_FS_GCCFG |= OTG_GCCFG_NOVBUSSENS;
+//    OTG_FS_GUSBCFG |= OTG_GUSBCFG_FDMOD | OTG_GUSBCFG_TRDT_MASK;
+//	OTG_FS_GCCFG |= OTG_GCCFG_NOVBUSSENS | OTG_GCCFG_PWRDWN;
+//	OTG_FS_GCCFG &= ~(OTG_GCCFG_VBUSBSEN | OTG_GCCFG_VBUSASEN);
+//	usbd_register_set_config_callback(usbdev, usb_set_config);
+	usbd_register_set_config_callback(usbdev, usb_set_config);
+//	usbd_register_set_config_callback(usbdev, gpio_set_config);
 	usbd_register_set_config_callback(usbdev, usbadc_set_config);
     usbd_register_set_config_callback(usbdev, dfu_set_config2);
 	delay_setup();

@@ -105,17 +105,7 @@ void gdb_usb_out_cb(usbd_device *dev, uint8_t ep)
 static void gdb_if_update_buf(void)
 {
 	while (usb_get_config() != 1);
-#ifdef STLINKV3
-	__asm__ volatile("cpsid i; isb");
-	if (count_new) {
-		memcpy(buffer_out, double_buffer_out, count_new);
-		count_out = count_new;
-		count_new = 0;
-		out_ptr = 0;
-		usbd_ep_nak_set(usbdev, CDCACM_GDB_ENDPOINT, 0);
-	}
-	__asm__ volatile("cpsie i; isb");
-#endif
+
 #ifdef STM32F4
 	__asm__ volatile("cpsid i; isb");
 	if (count_new) {

@@ -128,6 +128,21 @@ for (i = 3; i < write; i += 6) {
 
 }
 
+void neoevendma(uint8_t green, uint8_t red, uint8_t blue) {
+uint8_t i;
+uint8_t write;
+write = numpix * 3;
+for (i = 3; i < write; i += 6) {
+   if (i >= write) {
+   return;
+   } 
+   uint8_t cmdWrite[] = { 0xe, 0x4, 0x0, i, green, red, blue };
+   I2C_write(0x49, cmdWrite, sizeof(cmdWrite));
+}   
+  uint8_t cmdWrite2[] = { 0xe, 0x5 };
+  I2C_write(0x49, cmdWrite2, sizeof(cmdWrite2));
+}
+
 void neoodd(uint8_t green2, uint8_t red2, uint8_t blue2) {
 uint8_t ii;
 uint8_t write2;
@@ -337,6 +352,18 @@ for (i = 0; i < clear; i += 3) {
   }
 
 
+}  
+
+void clearseesawdma(uint8_t numofneo) {
+uint8_t clear = numofneo * 3;
+int i;
+clear = numofneo * 3;
+for (i = 0; i < clear; i += 3) {
+   uint8_t cmdWrite[] = { 0xe, 0x4, 0x0, i, 0x0, 0x0, 0x0 };
+   I2C_write(0x49, cmdWrite, sizeof(cmdWrite));
+    }
+    uint8_t cmdWrite4[] = { 0xe, 0x5 };
+	I2C_write(0x49, cmdWrite4, sizeof(cmdWrite4));
 }  
 
 void i2c2_init(void)

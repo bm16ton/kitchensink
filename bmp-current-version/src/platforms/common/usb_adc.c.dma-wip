@@ -39,7 +39,7 @@ static enum usbd_request_return_codes gadget0_control_request(usbd_device *dev,
 }
 
 //uint32_t adc_res[32];
-volatile static uint16_t adc_res[17];
+static volatile uint16_t adc_res[17];
 
 void dma2_setup(void) {
 
@@ -79,7 +79,7 @@ static char ret2[] = "0.0V ";
 void adc_start(void)
 {
 	rcc_periph_clock_enable(RCC_ADC1);
-
+/*
 #ifdef BLACKPILLV2
 //	gpio_mode_setup(GPIOA, GPIO_MODE_ANALOG, GPIO_PUPD_NONE, GPIO1);
 	gpio_mode_setup(GPIOA, GPIO_MODE_ANALOG, GPIO_PUPD_NONE, GPIO2);
@@ -122,9 +122,9 @@ void adc_start(void)
 
     adc_start_conversion_regular(ADC1);
     */
-#endif
+//#endif
 
-#ifdef GREENPILL
+#ifdef BLACKPILLV2
     static uint8_t channel_seq[16];
     gpio_mode_setup(GPIOA, GPIO_MODE_ANALOG, GPIO_PUPD_NONE, GPIO0);
     gpio_mode_setup(GPIOA, GPIO_MODE_ANALOG, GPIO_PUPD_NONE, GPIO1);
@@ -142,7 +142,7 @@ void adc_start(void)
     adc_enable_external_trigger_regular(ADC1, ADC_CR2_SWSTART, ADC_CR2_EXTEN_DISABLED);
     adc_set_right_aligned(ADC1);
     adc_set_sample_time_on_all_channels(ADC1, ADC_SMPR_SMP_28CYC);
-    adc_set_resolution(ADC1, 8);
+    adc_set_resolution(ADC1, 12);
 
 
     channel_seq[0] = ADC_CHANNEL0;
@@ -199,12 +199,12 @@ static void adc_once_f103(uint8_t ep)
     }
 }
 #endif
-#ifndef GREENPILL
+#ifndef BLACKPILLV2
 #ifndef F103
 static void adc_once(void)
 {
 //	uint8_t channel_array[16];
-#ifdef BLACKPILLV2
+//#ifdef BLACKPILLV2
 //    char test[32] = {0};
     static char ret[] = "0.0V ";
 //    gpio_clear(GPIOC, GPIO13);
@@ -251,15 +251,15 @@ uint8_t channels[] = { ADC_CHANNEL0, };
     }
 }
 #endif
-#endif
+//#endif
 
-#ifdef GREENPILL
+#ifdef BLACKPILLV2
 static void adc_once(void)
 {
 unsigned value;
 unsigned value2;
 static char ret[] = "0.0V ";
-static char ret2[] = "0.0V ";
+//static char ret2[] = "0.0V ";
 value = adc_res[0];
 value2 = adc_res[1];
 	value *= 3379; /* 3.3 * 1024 == 3379.2 */
@@ -271,14 +271,14 @@ value2 = adc_res[1];
 	
 	value2 *= 3379; /* 3.3 * 1024 == 3379.2 */
 	value2 += 104858; /* round, 0.05V * 2 ^ 21 == 104857.6 */
-	ret2[0] = (value >> 21) + '0';
+	ret2[0] = (value2 >> 21) + '0';
 	value2 &= (1 << 21) - 1;
 	value2 *= 10;
-	ret2[2] = (value >> 21) + '0';
+	ret2[2] = (value2 >> 21) + '0';
 	
 	
-	samples[0] = (uint32_t)ret;
-	samples[1] = (uint32_t)ret2;
+	samples[0] = (uint32_t)ret[0];
+	samples[1] = (uint32_t)ret2[0];
 	return;
 }
 #endif
@@ -315,7 +315,7 @@ static void gadget0_ss_in_cb(usbd_device *dev, uint8_t ep)
     adc_once();
 #endif
 
-#ifdef GREENPILL
+#ifdef BLACKPILLV2
     uint16_t x = usbd_ep_write_packet(usbdev, ep,&samples, sizeof(samples));
     if (x != BULK_EP_MAXPACKET) {
 	;

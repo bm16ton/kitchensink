@@ -28,6 +28,8 @@
 #include "usb.h"
 #include "usbuart.h"
 #include "morse.h"
+#include <string.h>
+#include <ctype.h>
 #include <usb_i2c.h>
 #include <usb_gpio.h>
 #include <usb_adc.h>
@@ -67,10 +69,11 @@
 #include <libopencm3/stm32/usart.h>
 
 #include "seesawneo.h"
+#include "drvrspi_flash.h"
 
-#include "include/nrf24l01_regs.h"
-#include "include/nrf24l01_hw.h"
-#include "include/nrf24l01.h"
+//#include "include/nrf24l01_regs.h"
+//#include "include/nrf24l01_hw.h"
+//#include "include/nrf24l01.h"
 
 
 #define IRQ_TYPE_NONE		0
@@ -90,7 +93,7 @@ int usbmode;
 void neopixel_init(void);
 void adc_init(void);
 uint8_t *i2ctx[256];
-void nrf_dump_regs(nrf_regs *r);
+//void nrf_dump_regs(nrf_regs *r);
 
 //void tsirq_pin_init(void);
 //int tsxor = 1;
@@ -183,10 +186,12 @@ void platform_init(void)
 
     usbmode = 1;
 
-	
+	dma2_setup();
 	usart_setup();
     i2c_init();
-    i2c_setup2();
+//    i2c_dma_start();
+//	i2c_setup2();
+    i2c2_init();
     systime_setup(168000);
     
 	usbgpio_init();
@@ -228,6 +233,10 @@ void platform_init(void)
 	printf("Booted BMP\n");
 	neoup(0x18, 0xa, 0xff, 0xc);
     neodown(0x18, 0x0, 0x0, 0x0);
+    delay(100);
+    sendi2ctest();
+    delay(200);
+    neotimodd();
 //	return;
 	} else if ((magic[0] == BOOTMAGIC6) && (magic[1] == BOOTMAGIC7)) 
 	{
@@ -261,10 +270,13 @@ void platform_init(void)
  	blackmagic_usb_init(2);
  	extern void slcan_init();
     slcan_init();
-	i2c_setup2();
+	i2c_dma_start();
+//	i2c_setup2();
+    i2c2_init();
     adc_init();
     seesawneoint(24);
     clearseesaw(24);
+    delay(100);
     rcc_periph_clock_enable(RCC_DMA1);
     tftdma();
     st_init();
@@ -298,11 +310,13 @@ void platform_init(void)
 
     neoup(0x18, 0xa, 0xff, 0xc);
     neodown(0x18, 0x0, 0x0, 0x0);
+        delay(100);
+    sendi2ctest();
+    delay(200);
+    neotimodd();
 //    neoeveryother(0xff, 0x0, 0xff, 0x0, 0xff, 0x0);
 
 	} else {
-
-
 
 	rcc_clock_setup_pll(&rcc_hse_8mhz_3v3[RCC_CLOCK_3V3_168MHZ]);
 
@@ -369,7 +383,9 @@ void platform_init(void)
 	st_draw_rectangle(385, 185, 80, 25, ILI9486_RED);
 	st_fill_rect(385, 185, 80, 25, ILI9486_RED);
 	st_draw_string(385, 185, "can bus", ST_COLOR_YELLOW, &font_fixedsys_mono_24);
-
+    
+    spiflash_setup();
+    
     tsirq_pin_init();
 
 	OTG_FS_GCCFG |= OTG_GCCFG_NOVBUSSENS | OTG_GCCFG_PWRDWN;

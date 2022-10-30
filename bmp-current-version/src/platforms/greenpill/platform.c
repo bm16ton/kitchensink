@@ -27,6 +27,7 @@
 #include "usbuart.h"
 #include "morse.h"
 #include "usb_i2c.h"
+#include "usb_adc.h"
 #include "usb_gpio.h"
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/cm3/scb.h>
@@ -123,11 +124,12 @@ void platform_init(void)
 
     i2c_init();
 	platform_timing_init();
-	blackmagic_usb_init();
+	blackmagic_usb_init(1);
 	usbuart_init();
 	usbgpio_init();
 
-    adc_init();
+    dma2_setup();
+    adc_start();
 	gpio_clear(GPIOC, GPIO13);
 
 	// https://github.com/libopencm3/libopencm3/pull/1256#issuecomment-779424001

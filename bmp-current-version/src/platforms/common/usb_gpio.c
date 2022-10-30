@@ -16,7 +16,8 @@
 #include "ws2812_spi.h"
 #endif
 #include "usb.h"
-#ifdef BLACKPILLV2
+//#ifdef BLACKPILLV2
+#if defined(BLACKPILLV2) || defined(GREENPILL)
 #define GPIO1_PORT   GPIOC      //LED
 #define GPIO1_PIN    GPIO13     //LED
 #define GPIO2_PORT   GPIOB
@@ -45,6 +46,7 @@
 #define PWM3_PORT    GPIOC
 #define PWM3_PIN     GPIO0
 #endif
+
 #ifdef F103
 #define GPIO1_PORT   GPIOC      //LED
 #define GPIO1_PIN    GPIO0     //LED
@@ -111,6 +113,32 @@ static void irq_none(void)
 */
 #endif
 
+#ifdef GREENPILL
+static void irq_pin_init(void)
+{
+//    nvic_disable_irq(NVIC_EXTI0_IRQ);
+    #ifdef ENABLE_NEOPIXEL
+    ws2812_write_rgb(SPI1, 220, 180, 0);
+    #endif
+	my_delay_2();
+    nvic_enable_irq(NVIC_EXTI4_IRQ);					
+	gpio_mode_setup(GPIO5_PORT, GPIO_MODE_INPUT, GPIO_PUPD_NONE, GPIO5_PIN);
+	my_delay_2();
+	exti_select_source(EXTI4, GPIO5_PORT);
+    exti_set_trigger(EXTI4, irqtype);
+	exti_enable_request(EXTI4);
+}
+/*
+static void irq_none(void)
+{
+    nvic_disable_irq(NVIC_EXTI4_IRQ);
+	my_delay_2();				
+	exti_disable_request(EXTI4);
+	my_delay_2();
+}
+*/
+#endif
+
 #ifdef F103
 static void irq_pin_init(void)
 {
@@ -133,6 +161,56 @@ static void irq_pin_init(void)
 #endif
 
 #ifdef BLACKPILLV2
+static void pwm_probe(void)
+{
+    pwm_init();
+    pwm_set_frequency(1000000);
+	pwm_set_dc(PWM_CH1, 0);
+	pwm_set_dc(PWM_CH2, 0);
+	pwm_set_dc(PWM_CH3, 0);
+
+//	pwm_set_dc(PWM_CH4, 0);
+
+	pwm_set_dc(PWM_CH4, 0);
+
+	pwm_start();
+	my_delay_2();
+    pwm_set_frequency(1000000);
+	pwm_set_dc(PWM_CH1, 100);
+	pwm_set_dc(PWM_CH2, 200);
+	pwm_set_dc(PWM_CH3, 300);
+
+//	pwm_set_dc(PWM_CH4, 500);
+
+	pwm_set_dc(PWM_CH4, 500);
+
+	my_delay_2();
+
+}	
+
+
+static void pwm_disable(void)
+{
+	timer_set_oc_value(TIM8, TIM_OC1, 0);
+	timer_set_oc_value(TIM8, TIM_OC2, 0);
+	timer_set_oc_value(TIM8, TIM_OC3, 0);
+
+//	timer_set_oc_value(TIM8, TIM_OC4, 0);
+	pwm_set_dc(PWM_CH1, 0);
+	pwm_set_dc(PWM_CH2, 0);
+	pwm_set_dc(PWM_CH3, 0);
+//	pwm_set_dc(PWM_CH4, 0);
+	timer_disable_oc_output(TIM8, TIM_OC1);
+	timer_disable_oc_output(TIM8, TIM_OC2);
+	timer_disable_oc_output(TIM8, TIM_OC3);
+//	timer_disable_oc_output(TIM8, TIM_OC4);
+
+
+	my_delay_2();
+}	
+#endif
+
+#ifdef GREENPILL
 static void pwm_probe(void)
 {
     pwm_init();
@@ -280,6 +358,64 @@ static void usbgpio_input(int gpio)
 	my_delay_1();
 }
 #endif
+
+#ifdef GREENPILL
+static void usbgpio_output(int gpio)
+{
+	if (gpio == 1) {
+	gpio_mode_setup(GPIO1_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO1_PIN);
+	gpio_set_output_options(GPIO1_PORT, GPIO_OTYPE_PP, GPIO_OSPEED_2MHZ,
+							GPIO1_PIN);
+	gpio_set(GPIO1_PORT, GPIO1_PIN);
+    } else if (gpio == 2) {
+	gpio_mode_setup(GPIO2_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO2_PIN);
+	gpio_set_output_options(GPIO2_PORT, GPIO_OTYPE_PP, GPIO_OSPEED_2MHZ,
+							GPIO2_PIN);
+	gpio_set(GPIO2_PORT, GPIO2_PIN);
+	} else if (gpio == 3) {
+	gpio_mode_setup(GPIO3_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO3_PIN);
+	gpio_set_output_options(GPIO3_PORT, GPIO_OTYPE_PP, GPIO_OSPEED_2MHZ,
+							GPIO3_PIN);
+	gpio_set(GPIO3_PORT, GPIO3_PIN);
+	} else if (gpio == 4) {
+	gpio_mode_setup(GPIO4_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO4_PIN);
+	gpio_set_output_options(GPIO4_PORT, GPIO_OTYPE_PP, GPIO_OSPEED_2MHZ,
+							GPIO4_PIN);
+	gpio_set(GPIO4_PORT, GPIO4_PIN);
+	} else if (gpio == 5) {
+	gpio_mode_setup(GPIO5_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO5_PIN);
+	gpio_set_output_options(GPIO5_PORT, GPIO_OTYPE_PP, GPIO_OSPEED_2MHZ,
+							GPIO5_PIN);
+	gpio_set(GPIO5_PORT, GPIO5_PIN);
+	}
+	
+    my_delay_1();
+}
+
+static void usbgpio_input(int gpio)
+{
+
+	if (gpio == 1) {
+	gpio_mode_setup(GPIO1_PORT, GPIO_MODE_INPUT, GPIO_PUPD_NONE, GPIO1_PIN);
+	gpio_set(GPIO1_PORT, GPIO1_PIN);
+	} else if (gpio == 2) {
+	gpio_mode_setup(GPIO2_PORT, GPIO_MODE_INPUT, GPIO_PUPD_NONE, GPIO2_PIN);
+	gpio_set(GPIO2_PORT, GPIO2_PIN);
+	} else if (gpio == 3) {
+	gpio_mode_setup(GPIO3_PORT, GPIO_MODE_INPUT, GPIO_PUPD_NONE, GPIO3_PIN);
+	gpio_set(GPIO3_PORT, GPIO3_PIN);
+	} else if (gpio == 4) {
+	gpio_mode_setup(GPIO4_PORT, GPIO_MODE_INPUT, GPIO_PUPD_NONE, GPIO4_PIN);
+	gpio_set(GPIO4_PORT, GPIO4_PIN);
+	} else if (gpio == 5) {
+	gpio_mode_setup(GPIO5_PORT, GPIO_MODE_INPUT, GPIO_PUPD_NONE, GPIO5_PIN);
+	gpio_set(GPIO5_PORT, GPIO5_PIN);
+	}
+
+	my_delay_1();
+}
+#endif
+
 
 #ifdef F103
 static void usbgpio_output(int gpio)
@@ -668,6 +804,22 @@ void exti3_isr(void)
 }
 #endif
 
+#ifdef GREENPILL
+void exti4_isr(void)
+{
+    // char buf2[64] __attribute__ ((aligned(4)));
+    uint8_t buft[4] __attribute__ ((aligned(2))) = {3, 3, 3, 3};
+    #ifdef ENABLE_NEOPIXEL
+    ws2812_write_rgb(SPI1, 220, 0, 220);
+    #endif
+	exti_reset_request(EXTI4);
+//	usbd_ep_write_packet(usbd_device usbd_dev, 0x83, buf2, 64);
+    usbd_ep_write_packet(usbdev, 0x82, buft, 4);
+    gpio_toggle(GPIOC, GPIO13);
+    exti_set_trigger(EXTI4, irqtype);
+}
+#endif
+
 #ifdef BLACKPILLV2
 void exti4_isr(void)
 {
@@ -706,6 +858,39 @@ void usbgpio_init(void)
 #endif
 
 #ifdef BLACKPILLV2
+void usbgpio_init(void)
+{
+	rcc_periph_clock_enable(RCC_GPIOC);
+    rcc_periph_clock_enable(RCC_SYSCFG);
+	gpio_mode_setup(GPIO1_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO1_PIN);
+	gpio_set_output_options(GPIO1_PORT, GPIO_OTYPE_PP, GPIO_OSPEED_2MHZ,
+							GPIO1_PIN);
+
+	gpio_set(GPIO1_PORT, GPIO1_PIN);
+
+
+
+	gpio_mode_setup(GPIO2_PORT, GPIO_MODE_INPUT, GPIO_PUPD_NONE, GPIO2_PIN);
+	
+	gpio_mode_setup(GPIO4_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO4_PIN);
+	gpio_set_output_options(GPIO4_PORT, GPIO_OTYPE_PP, GPIO_OSPEED_2MHZ,
+							GPIO4_PIN);
+		
+				
+	gpio_mode_setup(GPIO3_PORT, GPIO_MODE_INPUT, GPIO_PUPD_NONE, GPIO3_PIN);
+	gpio_mode_setup(GPIO5_PORT, GPIO_MODE_INPUT, GPIO_PUPD_NONE, GPIO5_PIN);
+	
+    my_delay_1();
+	gpio_clear(GPIO1_PORT, GPIO1_PIN);
+	gpio_set(GPIO2_PORT, GPIO2_PIN);
+	gpio_set(GPIO4_PORT, GPIO4_PIN);
+	gpio_set(GPIO3_PORT, GPIO3_PIN);
+	gpio_set(GPIO5_PORT, GPIO5_PIN);
+
+}
+#endif
+
+#ifdef GREENPILL
 void usbgpio_init(void)
 {
 	rcc_periph_clock_enable(RCC_GPIOC);
