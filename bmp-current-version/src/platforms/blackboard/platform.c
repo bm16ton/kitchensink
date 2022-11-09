@@ -189,7 +189,7 @@ void platform_init(void)
 	dma2_setup();
 	usart_setup();
     i2c_init();
-//    i2c_dma_start();
+    i2c_dma_start();
 //	i2c_setup2();
     i2c2_init();
     systime_setup(168000);
@@ -248,7 +248,7 @@ void platform_init(void)
 	    //FW_ADDR has to be aligned to 0x100
     bootjump();
     
-    
+  ////////////////////////////////// UNUSED ///////////////////////////////////////////  
 	rcc_periph_clock_enable(RCC_OTGFS);
 	rcc_periph_clock_enable(RCC_CRC);
 	rcc_periph_clock_enable(RCC_USART1);
@@ -315,9 +315,9 @@ void platform_init(void)
     delay(200);
     neotimodd();
 //    neoeveryother(0xff, 0x0, 0xff, 0x0, 0xff, 0x0);
-
+////////////////////////////////// UNUSED /////////////////////////////////////////
 	} else {
-
+    SCB_VTOR = (uint32_t) 0x08000000;
 	rcc_clock_setup_pll(&rcc_hse_8mhz_3v3[RCC_CLOCK_3V3_168MHZ]);
 
 	/* Enable peripherals */
@@ -348,9 +348,17 @@ void platform_init(void)
 
     
     systime_setup(168000);
+    delay(100);
+    rcc_periph_clock_enable(RCC_DMA1);
+    tftdma();
+    st_init();
+    delay(100);
+
  	blackmagic_usb_init(0);
 	usbuart_init();
 	i2c_dma_start();
+//i2c_init();
+//    i2c_init();
 //	i2c_setup2();
     i2c2_init();
 //	sendi2ctest();
@@ -359,11 +367,11 @@ void platform_init(void)
     
      clearseesaw(24);
 
-    delay(100);
-    rcc_periph_clock_enable(RCC_DMA1);
-    tftdma();
-    st_init();
-    delay(100);
+
+
+
+
+
 
     st_fill_screen(0xD69A);
     delay(122);
@@ -399,9 +407,9 @@ void platform_init(void)
     delay(122);
     neodown(0x18, 0x0, 0x50, 0x0);
     delay(100);
-    sendi2ctest();
-    delay(200);
-    neotimodd();
+//    sendi2ctest();
+//    delay(200);
+//    neotimodd();
 //    neoeveryother(0xff, 0x0, 0xff, 0x0, 0xff, 0x0);
 	}
 }
@@ -424,10 +432,6 @@ int _write(int file, char *ptr, int len)
 }
 
 static void i2c_setup2(void) {
-  // Set alternate functions for the SCL and SDA pins of I2C1. 
-	// GPIO for I2C1 
-
-
 	rcc_periph_clock_enable(RCC_I2C2);
 	rcc_periph_clock_enable(RCC_GPIOB);
 	gpio_mode_setup(GPIOB, GPIO_MODE_AF, GPIO_PUPD_PULLUP, GPIO10);
@@ -536,23 +540,20 @@ void exti1_isr(void)
             platform_request_boot2();
     }
     
-    if ((xraw >= 500 && xraw <= 600 ) && (yraw >= 2000 && yraw <= 2050)) {
+    if ((xraw >= 500 && xraw <= 600 ) && (yraw >= 1800 && yraw <= 2000)) {
 
     st_fill_screen_nodma(0xF0C3);
-//	st_draw_string(10, 20, "EXTERNAL FIRMWARE", ST_COLOR_BLACK, &font_ubuntu_48);
     st_draw_bitmap_nodma(40, 22, &extfirm);
 
           magic[0] = BOOTMAGIC6;
           magic[1] = BOOTMAGIC7;
-//st_fill_screen(ILI9486_GREEN);
+
 	        GPIOA_MODER |= (0x00000000);
 
- //           platform_request_boot3();
             scb_reset_system();
             scb_reset_core();
             return;
- 
-//    platform_request_boot3();
+
      }
     exti_reset_request(EXTI1);
     exti_set_trigger(EXTI1, IRQ_TYPE_EDGE_FALLING);
@@ -602,11 +603,6 @@ const char *platform_target_voltage(void)
 void platform_request_boot3(void)
 {
 	uint32_t *magic = (uint32_t *)&_ebss;
-//	st_fill_screen_nodma(ILI9486_RED);
-//	st_draw_string_withbg(90, 110, "EXTERNAL FIRMWARE", ST_COLOR_BLACK, ST_COLOR_WHITE, &font_fixedsys_mono_24);
-//	usart_disable(USART_CONSOLE);
-//	rcc_periph_clock_disable(RCC_USART1);
-//	gpio_clear(GPIOA, GPIO9);
 	GPIOA_MODER |= (0x00000000);
 	delay(122);
 	magic[0] = BOOTMAGIC6;

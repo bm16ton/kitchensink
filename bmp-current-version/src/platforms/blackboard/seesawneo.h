@@ -31,12 +31,19 @@ void clearseesaw(uint8_t numofneo);
 
 void neoeveryother(uint8_t green, uint8_t red, uint8_t blue, uint8_t green2, uint8_t red2, uint8_t blue2);
 
+void neoeveryotherdma(uint8_t green, uint8_t red, uint8_t blue, uint8_t green2, uint8_t red2, uint8_t blue2);
+
 void neodown(uint8_t pins, uint8_t green, uint8_t red, uint8_t blue);
 
 void neoup(uint8_t pins, uint8_t green, uint8_t red, uint8_t blue);
 
+void neoevendma(uint8_t green, uint8_t red, uint8_t blue);
+
 void neoeven(uint8_t green, uint8_t red, uint8_t blue);
+
+void neoodddma(uint8_t green2, uint8_t red2, uint8_t blue2);
 
 void neoodd(uint8_t green, uint8_t red, uint8_t blue);
 
+void neotimtest(void);
 #endif

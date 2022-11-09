@@ -210,12 +210,43 @@ for (uint32_t loop2 = 0; loop2 < 18000000; ++loop2) {
     __asm__("nop");
   } 
   
-  neoeven(green2, red2, blue2);
+neoeven(green2, red2, blue2);
 for (uint32_t loop = 0; loop < 10; ++loop) {
     __asm__("nop");
   } 
   
 neoodd(green, red, blue);
+
+for (uint32_t loop2 = 0; loop2 < 18000000; ++loop2) {
+    __asm__("nop");
+  } 
+
+//clearseesaw(24);  
+ 
+ }
+}
+
+void neoeveryotherdma(uint8_t green, uint8_t red, uint8_t blue, uint8_t green2, uint8_t red2, uint8_t blue2) {
+uint8_t mloop;
+for (mloop = 0; mloop < 2; mloop++) {
+
+neoevendma(green, red, blue);
+for (uint32_t loop = 0; loop < 10; ++loop) {
+    __asm__("nop");
+  } 
+  
+neoodddma(green2, red2, blue2);
+
+for (uint32_t loop2 = 0; loop2 < 18000000; ++loop2) {
+    __asm__("nop");
+  } 
+  
+neoevendma(green2, red2, blue2);
+for (uint32_t loop = 0; loop < 10; ++loop) {
+    __asm__("nop");
+  } 
+  
+neoodddma(green, red, blue);
 
 for (uint32_t loop2 = 0; loop2 < 18000000; ++loop2) {
     __asm__("nop");

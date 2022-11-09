@@ -35,7 +35,7 @@ SRC +=             \
     bitops.c \
     pwm.c \
     usb_adc.c \
-
+	usbuart.c	\
     
 ifeq ($(STLINKV3), 1)
 SRC += stlinkv3.c \

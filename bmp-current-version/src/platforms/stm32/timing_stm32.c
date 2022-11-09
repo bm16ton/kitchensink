@@ -28,6 +28,7 @@
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/cm3/scb.h>
 #include "platform.h"
+#include <seesawneo.h>
 
 //#include "systime.h"
 #ifdef BLACKPILLV2
@@ -87,9 +88,13 @@ void sys_tick_handler(void)
 {
 //uint32_t *magic = (uint32_t *)&_ebss;
     systick_ms++;
-/*    
-    if (systick_ms % 14000 == 0) {
-        if (seesaw == 1) {
+   
+    if (systick_ms % 4000 == 0) {
+        neotimtest();
+    }
+ 
+ 
+ /*       if (seesaw == 1) {
     uint8_t pwmon[] = { 0x08, 0x01, 0x01, 0xff };
     i2c_transfer7(I2C3, 0x49, pwmon, sizeof(pwmon), 0, 0);
     seesaw = 0;
