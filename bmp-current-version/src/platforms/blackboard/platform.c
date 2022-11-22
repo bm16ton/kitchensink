@@ -353,17 +353,21 @@ void platform_init(void)
 	gpio_set_output_options(TDO_PORT, GPIO_OTYPE_PP, GPIO_OSPEED_2MHZ,
 							TDO_PIN | TMS_PIN);
 
+    i2c_dma_start();
     i2c2_init();
     systime_setup(168000);
     delay(100);
-
+    rcc_periph_clock_enable(RCC_DMA1);
+    tftdma();
+    delay(100);
+    st_init();
 
     put_status("just after init");
 
 
  	blackmagic_usb_init(0);
 	usbuart_init();
-	i2c_dma_start();
+	
 
 //	i2c_setup2();
     
@@ -373,10 +377,7 @@ void platform_init(void)
     
     clearseesaw(24);
     delay(422);
-    rcc_periph_clock_enable(RCC_DMA1);
-    tftdma();
-    delay(100);
-    st_init();
+
     delay(100);
     
     st_fill_screen(0xD69A);
@@ -698,7 +699,7 @@ void platform_request_boot(void)
 	st_draw_string_withbg(90, 110, "DFU FIRMWARE UPGRADE", ST_COLOR_RED, ST_COLOR_WHITE, &font_fixedsys_mono_24);
 	usart_disable(USART_CONSOLE);
 	rcc_periph_clock_disable(RCC_USART1);
-//	gpio_clear(GPIOA, GPIO9);
+	gpio_clear(GPIOA, GPIO9);
 	GPIOA_MODER |= (0x00000000);
 	delay(122);
 	magic[0] = BOOTMAGIC0;

@@ -134,7 +134,7 @@ SOFTWARE.
 #endif
 
 //uint16_t tfttx[1024];
-
+#define ST_USE_SPI_DMA
 #define ST_SPI			SPI2
 #ifdef ST_USE_SPI_DMA
 	#define ST_DMA			DMA1
