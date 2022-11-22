@@ -569,7 +569,7 @@ gpio_set_output_options(GPIOB, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ, GPIO4 | GPIO5 |
 //   {
 
       printf("start of while 1\n");
-      uint8_t index = 0;
+//      uint8_t index = 0;
       uint32_t result1;
 
       spi_enable(SPI3);
@@ -606,7 +606,7 @@ gpio_set_output_options(GPIOB, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ, GPIO4 | GPIO5 |
      printf("manufacturer = %d\n", manu);
 //     char buf[8];
      uint16_t test3 = w25_manuf_device(SPI3);
-     sprintf(mani, "%02lx", test3);
+     sprintf(mani, "%02x", test3);
      if (test3) {
      st_draw_string(10, 114, mani, ST_COLOR_PURPLE, &font_fixedsys_mono_24);
      }

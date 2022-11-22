@@ -89,9 +89,9 @@ void sys_tick_handler(void)
 //uint32_t *magic = (uint32_t *)&_ebss;
     systick_ms++;
    
-    if (systick_ms % 4000 == 0) {
-        neotimtest();
-    }
+//    if (systick_ms % 4000 == 0) {
+//        neotimtest();
+//    }
  
  
  /*       if (seesaw == 1) {

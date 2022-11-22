@@ -183,7 +183,7 @@ uint8_t i;
 void printuarthex(uint8_t *data) {
 char batman[OUTBUFSZ];
 uint8_t i;
-uint16_t puppy;
+//uint16_t puppy;
     if (pos >= 345) {
         pos = 2;
         pos2 = pos2 + 18;

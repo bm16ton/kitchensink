@@ -194,6 +194,7 @@ static inline int platform_hwversion(void)
 	return 0;
 }
 
+void put_status(char *m);
 int _write(int file, char *ptr, int len);
 int _read(int file, char *ptr, int len);
 void platform_request_boot2(void);

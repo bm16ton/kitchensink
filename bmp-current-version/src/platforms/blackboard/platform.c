@@ -202,7 +202,7 @@ void platform_init(void)
 
  //   dma2_setup();
     adc_start();
-    neopixel_init();
+//    neopixel_init();
     seesawneoint(24);
     clearseesaw(24);
     rcc_periph_clock_enable(RCC_DMA1);
@@ -223,7 +223,7 @@ void platform_init(void)
 	st_draw_string(385, 125, "BMP", ST_COLOR_YELLOW, &font_fixedsys_mono_24);
 	st_draw_rectangle(385, 155, 80, 25, ILI9486_RED);
 	st_fill_rect(385, 155, 80, 25, ILI9486_RED);
-	st_draw_string(385, 155, "can bus", ST_COLOR_YELLOW, &font_fixedsys_mono_24);
+	st_draw_string(385, 155, "Ext FW", ST_COLOR_YELLOW, &font_fixedsys_mono_24);
 	OTG_FS_GCCFG |= OTG_GCCFG_NOVBUSSENS | OTG_GCCFG_PWRDWN;
 	OTG_FS_GCCFG &= ~(OTG_GCCFG_VBUSBSEN | OTG_GCCFG_VBUSASEN);
     tsirq_pin_init();
@@ -271,7 +271,8 @@ void platform_init(void)
  	extern void slcan_init();
     slcan_init();
 	i2c_dma_start();
-//	i2c_setup2();
+	i2c_setup2();    // disable before reusing this section
+	neopixel_init();   // disable before reusing this section
     i2c2_init();
     adc_init();
     seesawneoint(24);
@@ -317,13 +318,19 @@ void platform_init(void)
 //    neoeveryother(0xff, 0x0, 0xff, 0x0, 0xff, 0x0);
 ////////////////////////////////// UNUSED /////////////////////////////////////////
 	} else {
-    SCB_VTOR = (uint32_t) 0x08000000;
+    
 	rcc_clock_setup_pll(&rcc_hse_8mhz_3v3[RCC_CLOCK_3V3_168MHZ]);
 
 	/* Enable peripherals */
+//	SCB_VTOR = (uint32_t) 0x08000000;
+
 	rcc_periph_clock_enable(RCC_OTGFS);
+	rcc_periph_clock_enable(RCC_GPIOA);
+	rcc_periph_clock_enable(RCC_GPIOB);
+	rcc_periph_clock_enable(RCC_GPIOC);
 	rcc_periph_clock_enable(RCC_CRC);
 	rcc_periph_clock_enable(RCC_USART1);
+	
     usbmode = 2;
     usart_setup();
 	/* Set up USB Pins and alternate function*/
@@ -346,34 +353,34 @@ void platform_init(void)
 	gpio_set_output_options(TDO_PORT, GPIO_OTYPE_PP, GPIO_OSPEED_2MHZ,
 							TDO_PIN | TMS_PIN);
 
-    
+    i2c2_init();
     systime_setup(168000);
     delay(100);
-    rcc_periph_clock_enable(RCC_DMA1);
-    tftdma();
-    st_init();
-    delay(100);
+
+
+    put_status("just after init");
+
 
  	blackmagic_usb_init(0);
 	usbuart_init();
 	i2c_dma_start();
-//i2c_init();
-//    i2c_init();
+
 //	i2c_setup2();
-    i2c2_init();
+    
 //	sendi2ctest();
     adc_init();
     seesawneoint(24);
     
-     clearseesaw(24);
-
-
-
-
-
-
-
+    clearseesaw(24);
+    delay(422);
+    rcc_periph_clock_enable(RCC_DMA1);
+    tftdma();
+    delay(100);
+    st_init();
+    delay(100);
+    
     st_fill_screen(0xD69A);
+
     delay(122);
 
     st_draw_bitmap(0, 192, &bm16ton);
@@ -387,12 +394,12 @@ void platform_init(void)
 	st_draw_string(385, 125, "BMP", ST_COLOR_PURPLE, &font_fixedsys_mono_24);
 	st_draw_rectangle(385, 155, 80, 25, ILI9486_RED);
 	st_fill_rect(385, 155, 80, 25, ILI9486_RED);
-	st_draw_string(385, 155, "i2c_ex", ST_COLOR_YELLOW, &font_fixedsys_mono_24);
+	st_draw_string(385, 155, "Ext FW", ST_COLOR_YELLOW, &font_fixedsys_mono_24);
 	st_draw_rectangle(385, 185, 80, 25, ILI9486_RED);
 	st_fill_rect(385, 185, 80, 25, ILI9486_RED);
-	st_draw_string(385, 185, "can bus", ST_COLOR_YELLOW, &font_fixedsys_mono_24);
+	st_draw_string(385, 185, "TBD", ST_COLOR_YELLOW, &font_fixedsys_mono_24);
     
-    spiflash_setup();
+//    spiflash_setup();
     
     tsirq_pin_init();
 
@@ -401,15 +408,16 @@ void platform_init(void)
 	printf("Booted BMP\n");
 
     neoup(0x18, 0xa, 0xff, 0xc);
-    neoeveryother(0x00, 0x09, 0x7D, 0x00, 0x7D, 0x09);
-    neoeveryother(0x00, 0x09, 0x7D, 0x00, 0x7D, 0x09);
-    neoeveryother(0x00, 0x09, 0x7D, 0x00, 0x7D, 0x09);
+//    neoeveryotherdma(0x00, 0x09, 0x7D, 0x00, 0x7D, 0x09);
+//    neoeveryotherdma(0x00, 0x09, 0x7D, 0x00, 0x7D, 0x09);
+//    neoeveryotherdma(0x00, 0x09, 0x7D, 0x00, 0x7D, 0x09);
     delay(122);
     neodown(0x18, 0x0, 0x50, 0x0);
     delay(100);
-//    sendi2ctest();
-//    delay(200);
-//    neotimodd();
+    sendi2ctest();
+    delay(200);
+    neotimodd();
+    put_status("end of init");
 //    neoeveryother(0xff, 0x0, 0xff, 0x0, 0xff, 0x0);
 	}
 }
@@ -430,6 +438,48 @@ int _write(int file, char *ptr, int len)
 	errno = EIO;
 	return -1;
 }
+
+
+
+/*
+ * put_status(char *)
+ *
+ * This is a helper function I wrote to watch the status register
+ * it decodes the bits and prints them on the console. Sometimes
+ * the SPI port comes up with the MODF flag set, you have to re-read
+ * the status port and re-write the control register to clear that.
+ */
+void put_status(char *m)
+{
+	uint16_t stmp;
+
+	printf(m);
+	printf(" Status: ");
+	stmp = SPI_SR(SPI2);
+	if (stmp & SPI_SR_TXE) {
+		printf("TXE, ");
+	}
+	if (stmp & SPI_SR_RXNE) {
+		printf("RXNE, ");
+	}
+	if (stmp & SPI_SR_BSY) {
+		printf("BUSY, ");
+	}
+	if (stmp & SPI_SR_OVR) {
+		printf("OVERRUN, ");
+	}
+	if (stmp & SPI_SR_MODF) {
+		printf("MODE FAULT, ");
+	}
+	if (stmp & SPI_SR_CRCERR) {
+		printf("CRC, ");
+	}
+	if (stmp & SPI_SR_UDR) {
+		printf("UNDERRUN, ");
+	}
+	printf("\n");
+}
+
 
 static void i2c_setup2(void) {
 	rcc_periph_clock_enable(RCC_I2C2);
@@ -536,25 +586,35 @@ void exti1_isr(void)
           
     }
     if ((xraw >= 850 && xraw <= 980 ) && (yraw >= 350 && yraw <= 450)) {
-            scb_reset_system();
-            platform_request_boot2();
-    }
-    
-    if ((xraw >= 500 && xraw <= 600 ) && (yraw >= 1800 && yraw <= 2000)) {
-
-    st_fill_screen_nodma(0xF0C3);
-    st_draw_bitmap_nodma(40, 22, &extfirm);
-
-          magic[0] = BOOTMAGIC6;
-          magic[1] = BOOTMAGIC7;
+        	usart_disable(USART_CONSOLE);
 
 	        GPIOA_MODER |= (0x00000000);
 
+            scb_reset_system();
+//            platform_request_boot2();
+            scb_reset_core();
+            
+    }
+    
+    if ((xraw >= 1000 && xraw <= 1100 ) && (yraw >= 350 && yraw <= 500)) {
+    usart_disable(USART_CONSOLE);
+    st_fill_screen_nodma(0xF0C3);
+    st_draw_bitmap_nodma(40, 22, &extfirm);
+    delay(122);
+          magic[0] = BOOTMAGIC6;
+          magic[1] = BOOTMAGIC7;
+          cm_disable_interrupts();
+	        GPIOA_MODER |= (0x00000000);
+	        GPIOB_MODER |= (0x00000000);
+	        GPIOC_MODER |= (0x00000000);
+	        GPIOD_MODER |= (0x00000000);
+	        delay(122);
             scb_reset_system();
             scb_reset_core();
             return;
 
      }
+  
     exti_reset_request(EXTI1);
     exti_set_trigger(EXTI1, IRQ_TYPE_EDGE_FALLING);
        

@@ -224,56 +224,7 @@ SOFTWARE.
 							__asm__("nop"); __asm__("nop"); __asm__("nop"); __asm__("nop"); \
 						} while(0)
 
-#ifdef ST_USE_SPI_DMA
 
-	#define ST_CONFIG_SPI_DMA()		{ \
-									/* DMA Peripheral address set to SPI*/ \
-									DMA_CPAR(ST_DMA, ST_DMA_CHANNEL) = (uint32_t)&SPI_DR(ST_SPI); \
-									/* Dma memory address is reset */ \
-									DMA_CMAR(ST_DMA, ST_DMA_CHANNEL) = 0; \
-									/* Number of data transfer is reset */ \
-									DMA_CNDTR(ST_DMA, ST_DMA_CHANNEL) = 0; \
-									/* DMA priority is high */ \
-									DMA_CCR(ST_DMA, ST_DMA_CHANNEL) = DMA_CCR_PL_HIGH; \
-									/* Data transfer direction: Read from memory */ \
-									DMA_CCR(ST_DMA, ST_DMA_CHANNEL) |= DMA_CCR_DIR; \
-									/* Disable circular DMA */ \
-									DMA_CCR(ST_DMA, ST_DMA_CHANNEL) &= ~DMA_CCR_CIRC; \
-									/* peripheral increment disabled */\
-									DMA_CCR(ST_DMA, ST_DMA_CHANNEL) &= ~DMA_CCR_PINC; \
-									/* memory increment enabled */ \
-									DMA_CCR(ST_DMA, ST_DMA_CHANNEL) |= DMA_CCR_MINC; \
-									/* peripheral and memory data size set to 8 bit */ \
-									DMA_CCR(ST_DMA, ST_DMA_CHANNEL) |= DMA_CCR_PSIZE_8BIT | DMA_CCR_MSIZE_8BIT; \
-								}
-
-	
-	__attribute__((always_inline)) static inline void _st_write_spi_dma(void *data_addr, uint16_t length)
-	{
-		// Set memory source address
-		DMA_CMAR(ST_DMA, ST_DMA_CHANNEL) = (uint32_t)data_addr;
-		// set data count
-		DMA_CNDTR(ST_DMA, ST_DMA_CHANNEL) = length;
-
-		// Enable DMA channel 
-		DMA_CCR(ST_DMA, ST_DMA_CHANNEL) |= DMA_CCR_EN;
-		// Enable SPI DMA. This will start the DMA transaction
-		SPI_CR2(ST_SPI) |= SPI_CR2_TXDMAEN;
-
-		// wait until all data is sent (count becomes 0)
-		while (DMA_CNDTR(ST_DMA, ST_DMA_CHANNEL));
-		// Wait until tx buffer is empty (not set)
-		while (!(SPI_SR(ST_SPI) & SPI_SR_TXE));
-		// Wait until bus is not busy
-		while (SPI_SR(ST_SPI) & SPI_SR_BSY);
-	
-		// Disable SPI DMA tx
-		SPI_CR2(ST_SPI) &= ~SPI_CR2_TXDMAEN;
-		// Disable DMA channel
-		DMA_CCR(ST_DMA, ST_DMA_CHANNEL) &= ~DMA_CCR_EN;
-	}
-
-#endif
 
 /*
  * inline function to send 8 bit command to the display

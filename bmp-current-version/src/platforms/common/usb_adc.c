@@ -39,7 +39,7 @@ static enum usbd_request_return_codes gadget0_control_request(usbd_device *dev,
 }
 
 //uint32_t adc_res[32];
-volatile static uint16_t adc_res[17];
+static uint16_t adc_res[17];
 
 void dma2_setup(void) {
 

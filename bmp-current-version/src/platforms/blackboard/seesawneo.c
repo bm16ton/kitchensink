@@ -65,7 +65,7 @@ if (timvalpoo == 0) {
     uint8_t cmdWrite4[] = { 0xe, 0x5 };
     I2C_write(0x49, cmdWrite4, sizeof(cmdWrite4));
     timvalpoo = 2;
-    } else if (timvalpoo == 2) {
+} else if (timvalpoo == 2) {
    uint8_t cmdWrite[] = { 0xe, 0x4, 0x0, 0x6, 0x0, 0x0, 0xff };
     I2C_write(0x49, cmdWrite, sizeof(cmdWrite));
     timvalpoo = 3;

@@ -53,6 +53,12 @@
 #define CDCACM_UART_ENDPOINT CDCACM_UART_ENDPOINT2
 #endif
 #include <libopencm3/usb/cdc.h>
+#include "ILI9486_Defines.h"
+#include "st7789_stm32_spi.h"
+#include "timing_stm32.h"
+#include <libopencm3/stm32/timer.h>
+#include <libopencm3/cm3/nvic.h>
+#include "seesawneo.h"
 
 static bool gdb_uart_dtr = true;
 
@@ -64,7 +70,10 @@ static enum usbd_request_return_codes gdb_uart_control_request(usbd_device *dev,
 	(void)buf;
 	(void)complete;
 	/* Is the request for the GDB UART interface? */
-	if (req->wIndex != GDB_IF_NO)
+//	if (req->wIndex == UART_IF_NO) {
+	    
+//	if (req->wIndex != GDB_IF_NO)
+    if (req->wIndex >= 4)
 		return USBD_REQ_NEXT_CALLBACK;
 
 	switch (req->bRequest) {
@@ -90,6 +99,10 @@ static enum usbd_request_return_codes debug_uart_control_request(usbd_device *de
 
 	switch (req->bRequest) {
 	case USB_CDC_REQ_SET_CONTROL_LINE_STATE:
+	    st_fill_rect(1, 123, 340, 195, 0xD69A);
+	    nvic_disable_irq(NVIC_TIM2_IRQ);          // Enable the Interrupt in the Interrupt Controller
+	    timer_disable_counter(TIM2); 
+	    clearseesawdma(24);
 		usb_serial_set_state(dev, req->wIndex, CDCACM_UART_ENDPOINT);
 #ifdef USBUSART_DTR_PIN
 		gpio_set_val(USBUSART_PORT, USBUSART_DTR_PIN, !(req->wValue & 1U));

@@ -333,7 +333,7 @@ void st_draw_bitmap(uint16_t x, uint16_t y, const tImage *bitmap)
 	#endif
 	ST_DC_DAT;
 
-	#ifndef ST_USE_SPI_DMA
+	#ifdef ST_USE_SPI_DMA
 		uint32_t bytes_to_write = width * height * 2;
 		uint16_t transfer_size = ST_BUFFER_SIZE_BYTES;
 		uint32_t src_start_address = 0;
@@ -404,7 +404,7 @@ void st_fill_color(uint16_t color, uint32_t len)
 	uint8_t color_high = color >> 8;
 	uint8_t color_low = color;
 
-	#ifndef ST_USE_SPI_DMA		
+	#ifdef ST_USE_SPI_DMA		
 		uint8_t disp_buffer[ST_BUFFER_SIZE_BYTES];
 		for (uint16_t i = 0; i < ST_BUFFER_SIZE_BYTES; i = i+2)
 		{
@@ -502,7 +502,7 @@ void st_fill_color_array(uint8_t *color_arr, uint32_t bytes)
 	#endif
 	ST_DC_DAT;
 
-	#ifndef ST_USE_SPI_DMA		
+	#ifdef ST_USE_SPI_DMA		
 	
 		// len is pixel count. But each pixel is 2 bytes. So, multiply by 2
 		uint32_t bytes_to_write = bytes;
@@ -583,9 +583,6 @@ void st_fill_rect_fast(uint16_t x1, uint16_t y1, uint16_t w, uint16_t h, uint16_
 }
 
 
-
-
-
 /*
  * Called by st_draw_line().
  * User need not call it
@@ -640,36 +637,7 @@ void st_draw_pixel(uint16_t x, uint16_t y, uint16_t color)
 		ST_CS_IDLE;
 	#endif
 }
-/*
-void st_draw_pixel(uint16_t x, uint16_t y, uint16_t color)
-{
-	
-//	* Why?: This function is mainly added in the driver so that  ui libraries can use it.
-//	* example: LittlevGL requires user to supply a function that can draw pixel
-	
 
-	st_set_address_window(x, y, x, y);
-	#ifdef ST_RELEASE_WHEN_IDLE
-		ST_CS_ACTIVE;
-	#endif
-	ST_DC_DAT;
-	uint8_t color_high = color >> 8;
-	uint8_t color_low = color;
-				_st_write_data_16bit(color_high); _st_write_data_16bit(color_low); 	_st_write_data_16bit(color_high); _st_write_data_16bit(color_low); //2
-				_st_write_data_16bit(color_high); _st_write_data_16bit(color_low); 	_st_write_data_16bit(color_high); _st_write_data_16bit(color_low); //4
-//	_st_write_data_16bit((uint8_t)(color >> 8));
-//	_st_write_data_16bit((uint8_t)color);
-	#ifdef ST_RELEASE_WHEN_IDLE
-		ST_CS_IDLE;
-	#endif
-}
-*/
-
-
-/**
- * Fill the entire display (screen) with `color`
- * @param color 16-bit RGB565 color
- */
 void st_fill_screen(uint16_t color)
 {
 	st_set_address_window(0, 0, st_tftwidth - 1, st_tftheight - 1);
@@ -853,36 +821,6 @@ void st_draw_line(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint8_t wi
 }
 
 
-
-/*
-void st_draw_pixel(uint16_t x, uint16_t y, uint16_t color)
-{
-	
-//	* Why?: This function is mainly added in the driver so that  ui libraries can use it.
-//	* example: LittlevGL requires user to supply a function that can draw pixel
-	
-
-	st_set_address_window(x, y, x, y);
-	#ifdef ST_RELEASE_WHEN_IDLE
-		ST_CS_ACTIVE;
-	#endif
-	ST_DC_DAT;
-	uint8_t color_high = color >> 8;
-	uint8_t color_low = color;
-				_st_write_data_16bit(color_high); _st_write_data_16bit(color_low); 	_st_write_data_16bit(color_high); _st_write_data_16bit(color_low); //2
-				_st_write_data_16bit(color_high); _st_write_data_16bit(color_low); 	_st_write_data_16bit(color_high); _st_write_data_16bit(color_low); //4
-//	_st_write_data_16bit((uint8_t)(color >> 8));
-//	_st_write_data_16bit((uint8_t)color);
-	#ifdef ST_RELEASE_WHEN_IDLE
-		ST_CS_IDLE;
-	#endif
-}
-*/
-
-/**
- * Rotate the display clockwise or anti-clockwie set by `rotation`
- * @param rotation Type of rotation. Supported values 0, 1, 2, 3
- */
 void st_rotate_display(uint8_t rotation)
 {
 	/*
@@ -1052,8 +990,7 @@ void dma_start(void *tfttx, size_t data_size) {
         ;
     }
     
-//    printf("middle of dma_start\n");
-//    printf("middle of dma_start\n");
+
 //    while(DMA_SCR(DMA1, DMA_STREAM4) & DMA_SxCR_EN) {
 //    ;
 //    }
@@ -1077,12 +1014,6 @@ static void gpio_setup(void)
     // Enable GPIOB clock
     rcc_periph_clock_enable(RCC_GPIOB);
 
-    // TFT Reset pin, pull low for 10uS or more to initiate reset
-    // Reset takes up to 120ms
- //   gpio_mode_setup(GPIOB, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, ST_RST);
- //   gpio_set(GPIOB, ST_RST);
-
-    // TFT A0 - D/C pin, 0:Command 1:Data
     gpio_mode_setup(GPIOB, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, ST_DC);
     gpio_clear(GPIOB, ST_DC);
 }
@@ -1097,60 +1028,24 @@ void st_init()
 	ST_CONFIG_GPIO_CLOCK();
 	// Configure gpio output dir and mode
 	gpio_setup();
-	// If using DMA, config SPI DMA
-//	#ifdef ST_USE_SPI_DMA
-//		ST_CONFIG_SPI_DMA();
-//	#endif
-	// Configure SPI settings
+
 	spi_init();
 
-	#ifdef ST_HAS_CS
 		ST_CS_ACTIVE;
-	#endif
-
-	// Hardwae reset is not mandatory if software rest is done
-
-/*
-	_st_write_command_16bit(ST7789_SWRESET);	//1: Software reset, no args, w/delay: delay(150)
-	_st_fixed_delay();
-
-	_st_write_command_16bit(ST7789_SLPOUT);	// 2: Out of sleep mode, no args, w/delay: delay(500)
-	_st_fixed_delay();
-
-	_st_write_command_16bit(ST7789_COLMOD);	// 3: Set color mode, 1 arg, delay: delay(10)
-	_st_write_data_8bit(ST7789_COLOR_MODE_65K | ST7789_COLOR_MODE_16BIT);	// 65K color, 16-bit color
-	_st_fixed_delay();
-
-	_st_write_command_16bit(ST7789_MADCTL);	// 4: Memory access ctrl (directions), 1 arg:
-	_st_write_data_8bit(ST7789_MADCTL_RGB);	// RGB Color
-//	_st_write_data_8bit(ST7789_MADCTL_MY | ST7789_MADCTL_MX | ST7789_MADCTL_RGB);
-//			st_tftheight = 240;
-//			st_tftwidth = 240;
-	_st_write_command_16bit(ST7789_INVON);	// 5: Inversion ON (but why?) delay(10)
-	_st_fixed_delay();
-
-	_st_write_command_16bit(ST7789_NORON);	// 6: Normal display on, no args, w/delay: delay(10)
-	_st_fixed_delay();
 
 
-	_st_write_command_16bit(ST7789_DISPON);	// 7: Main screen turn on, no args, w/delay: delay(500)
-	_st_fixed_delay();
-	
-	st_rotate_display(3);
-*/
-//_st_write_command_16bit(0x01);
+delay(120);
 delay(17);
     _st_write_command_16bit(0x01); // SW reset
-    delay(120);
 
+//    _st_write_command_16bit(0x01); // SW reset
+    delay(150);
     _st_write_command_16bit(0x11); // Sleep out, also SW reset
     delay(120);
 
     _st_write_command_16bit(0x3A);
     
       _st_write_data_16bit(0x55);           // 16 bit colour interface
-  
-  //    _st_write_data_16bit(0x66);           // 18 bit colour interface
 
 
     _st_write_command_16bit(0xC2);
@@ -1196,18 +1091,14 @@ delay(17);
     _st_write_data_16bit(0x20);
     _st_write_data_16bit(0x00);
  
- 
-      _st_write_command_16bit(TFT_INVOFF);
-  
-  //    _st_write_command_16bit(TFT_INVON);
-   
- 
+    _st_write_command_16bit(TFT_INVOFF);
+
     _st_write_command_16bit(0x36);
     _st_write_data_16bit(0x28);
     _st_write_data_16bit(0x00);
     _st_write_command_16bit(0x29);                     // display on
     delay(150);
-//    st_rotate_display(2);
+
  
 }
 

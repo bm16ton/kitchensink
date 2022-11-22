@@ -10,9 +10,9 @@ static uint32_t cpufreq = 1;
 
 void sys_tick_handler(void) {
 	systick_ms++;
-	if (systick_ms % 1000 == 0) {
-	lcdshow();
-	}
+//	if (systick_ms % 1000 == 0) {
+//	lcdshow();
+//	}
 }
 
 void systime_setup(uint32_t cpufreq_kHz) {
