@@ -70,10 +70,8 @@ static enum usbd_request_return_codes gdb_uart_control_request(usbd_device *dev,
 	(void)buf;
 	(void)complete;
 	/* Is the request for the GDB UART interface? */
-//	if (req->wIndex == UART_IF_NO) {
-	    
-//	if (req->wIndex != GDB_IF_NO)
-    if (req->wIndex >= 4)
+    
+	if (req->wIndex != GDB_IF_NO)
 		return USBD_REQ_NEXT_CALLBACK;
 
 	switch (req->bRequest) {
@@ -99,8 +97,8 @@ static enum usbd_request_return_codes debug_uart_control_request(usbd_device *de
 
 	switch (req->bRequest) {
 	case USB_CDC_REQ_SET_CONTROL_LINE_STATE:
-	    st_fill_rect(1, 123, 340, 195, 0xD69A);
-	    nvic_disable_irq(NVIC_TIM2_IRQ);          // Enable the Interrupt in the Interrupt Controller
+	    st_fill_rect(1, 68, 384, 245, 0xD69A);
+	    timer_disable_irq(TIM2, NVIC_TIM2_IRQ);          // Enable the Interrupt in the Interrupt Controller
 	    timer_disable_counter(TIM2); 
 	    clearseesawdma(24);
 		usb_serial_set_state(dev, req->wIndex, CDCACM_UART_ENDPOINT);
