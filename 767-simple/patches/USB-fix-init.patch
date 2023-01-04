@@ -1,0 +1,33 @@
+From 407bb941f8606c92bf0bd9bdc4b7c465bf4cd05f Mon Sep 17 00:00:00 2001
+From: Stoyan Shopov <sshopov@vmware.com>
+Date: Fri, 23 Oct 2020 15:32:36 +0300
+Subject: [PATCH] Fix usb_dwc_common.c endpoint initialization
+
+This commit addresses libopencm3 issue #1242:
+https://github.com/libopencm3/libopencm3/issues/1242
+---
+ lib/usb/usb_dwc_common.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/lib/usb/usb_dwc_common.c b/lib/usb/usb_dwc_common.c
+index 162bfd7ca9..a5d5be3ece 100644
+--- a/lib/usb/usb_dwc_common.c
++++ b/lib/usb/usb_dwc_common.c
+@@ -61,7 +61,7 @@ void dwc_ep_setup(usbd_device *usbd_dev, uint8_t addr, uint8_t type,
+ 		REBASE(OTG_DIEPTSIZ0) =
+ 			(max_size & OTG_DIEPSIZ0_XFRSIZ_MASK);
+ 		REBASE(OTG_DIEPCTL0) |=
+-			OTG_DIEPCTL0_EPENA | OTG_DIEPCTL0_SNAK;
++			OTG_DIEPCTL0_SNAK;
+ 
+ 		/* Configure OUT part. */
+ 		usbd_dev->doeptsiz[0] = OTG_DIEPSIZ0_STUPCNT_1 |
+@@ -87,7 +87,7 @@ void dwc_ep_setup(usbd_device *usbd_dev, uint8_t addr, uint8_t type,
+ 		REBASE(OTG_DIEPTSIZ(addr)) =
+ 		    (max_size & OTG_DIEPSIZ0_XFRSIZ_MASK);
+ 		REBASE(OTG_DIEPCTL(addr)) |=
+-		    OTG_DIEPCTL0_EPENA | OTG_DIEPCTL0_SNAK | (type << 18)
++		    OTG_DIEPCTL0_SNAK | (type << 18)
+ 		    | OTG_DIEPCTL0_USBAEP | OTG_DIEPCTLX_SD0PID
+ 		    | (addr << 22) | max_size;
+ 

@@ -1,0 +1,1 @@
+#define BULK_EP_MAXPACKET 512

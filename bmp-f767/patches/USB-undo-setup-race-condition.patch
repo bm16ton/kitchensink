@@ -1,0 +1,81 @@
+From 8a85d093fa9612c98a10b4ab5a74dedf5b0301d2 Mon Sep 17 00:00:00 2001
+From: Manuel Bl <10954524+manuelbl@users.noreply.github.com>
+Date: Thu, 22 Oct 2020 11:42:03 +0200
+Subject: [PATCH] Undo 26ab78a (setup complete race condition fix)
+
+---
+ lib/stm32/common/st_usbfs_core.c | 1 -
+ lib/usb/usb_control.c            | 5 +++++
+ lib/usb/usb_dwc_common.c         | 9 +--------
+ lib/usb/usb_lm4f.c               | 3 ---
+ 4 files changed, 6 insertions(+), 12 deletions(-)
+
+diff --git a/lib/stm32/common/st_usbfs_core.c b/lib/stm32/common/st_usbfs_core.c
+index 0dba875bc5..4f54d822d9 100644
+--- a/lib/stm32/common/st_usbfs_core.c
++++ b/lib/stm32/common/st_usbfs_core.c
+@@ -252,7 +252,6 @@ void st_usbfs_poll(usbd_device *dev)
+ 			/* OUT or SETUP? */
+ 			if (*USB_EP_REG(ep) & USB_EP_SETUP) {
+ 				type = USB_TRANSACTION_SETUP;
+-				st_usbfs_ep_read_packet(dev, ep, &dev->control_state.req, 8);
+ 			} else {
+ 				type = USB_TRANSACTION_OUT;
+ 			}
+diff --git a/lib/usb/usb_control.c b/lib/usb/usb_control.c
+index 531d43a5dc..dce1530f25 100644
+--- a/lib/usb/usb_control.c
++++ b/lib/usb/usb_control.c
+@@ -228,6 +228,11 @@ void _usbd_control_setup(usbd_device *usbd_dev, uint8_t ea)
+ 
+ 	usbd_ep_nak_set(usbd_dev, 0, 1);
+ 
++	if (usbd_ep_read_packet(usbd_dev, 0, req, 8) != 8) {
++		stall_transaction(usbd_dev);
++		return;
++	}
++
+ 	if (req->wLength == 0) {
+ 		usb_control_setup_read(usbd_dev, req);
+ 	} else if (req->bmRequestType & 0x80) {
+diff --git a/lib/usb/usb_dwc_common.c b/lib/usb/usb_dwc_common.c
+index 162bfd7ca9..11af260959 100644
+--- a/lib/usb/usb_dwc_common.c
++++ b/lib/usb/usb_dwc_common.c
+@@ -358,11 +358,6 @@ void dwc_poll(usbd_device *usbd_dev)
+ 		uint32_t rxstsp = REBASE(OTG_GRXSTSP);
+ 		uint32_t pktsts = rxstsp & OTG_GRXSTSP_PKTSTS_MASK;
+ 		uint8_t ep = rxstsp & OTG_GRXSTSP_EPNUM_MASK;
+-
+-		if (pktsts == OTG_GRXSTSP_PKTSTS_SETUP_COMP) {
+-			usbd_dev->user_callback_ctr[ep][USB_TRANSACTION_SETUP] (usbd_dev, ep);
+-		}
+-
+ 		if (pktsts == OTG_GRXSTSP_PKTSTS_OUT_COMP
+ 			|| pktsts == OTG_GRXSTSP_PKTSTS_SETUP_COMP)  {
+ 			REBASE(OTG_DOEPTSIZ(ep)) = usbd_dev->doeptsiz[ep];
+@@ -395,9 +390,7 @@ void dwc_poll(usbd_device *usbd_dev)
+ 		/* Save packet size for dwc_ep_read_packet(). */
+ 		usbd_dev->rxbcnt = (rxstsp & OTG_GRXSTSP_BCNT_MASK) >> 4;
+ 
+-		if (type == USB_TRANSACTION_SETUP) {
+-			dwc_ep_read_packet(usbd_dev, ep, &usbd_dev->control_state.req, 8);
+-		} else if (usbd_dev->user_callback_ctr[ep][type]) {
++		if (usbd_dev->user_callback_ctr[ep][type]) {
+ 			usbd_dev->user_callback_ctr[ep][type] (usbd_dev, ep);
+ 		}
+ 
+diff --git a/lib/usb/usb_lm4f.c b/lib/usb/usb_lm4f.c
+index 1d0d688a3d..5eb476d382 100644
+--- a/lib/usb/usb_lm4f.c
++++ b/lib/usb/usb_lm4f.c
+@@ -503,9 +503,6 @@ static void lm4f_poll(usbd_device *usbd_dev)
+ 				usbd_dev->control_state.state != LAST_DATA_OUT)
+ 				? USB_TRANSACTION_SETUP :
+ 				  USB_TRANSACTION_OUT;
+-			if (type == USB_TRANSACTION_SETUP) {
+-				lm4f_ep_read_packet(usbd_dev, 0, &usbd_dev->control_state.req, 8);
+-			}
+ 			if (usbd_dev->user_callback_ctr[0][type]) {
+ 				usbd_dev->
+ 					user_callback_ctr[0][type](usbd_dev, 0);

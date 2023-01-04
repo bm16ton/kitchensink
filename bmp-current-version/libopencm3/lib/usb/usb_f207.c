@@ -23,8 +23,10 @@
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/usb/usbd.h>
 #include <libopencm3/usb/dwc/otg_hs.h>
+
 #include "usb_private.h"
 #include "usb_dwc_common.h"
+
 
 /* Receive FIFO size in 32-bit words. */
 #define RX_FIFO_SIZE 512
@@ -53,28 +55,42 @@ const struct _usbd_driver stm32f207_usb_driver = {
 /** Initialize the USB device controller hardware of the STM32. */
 static usbd_device *stm32f207_usbd_init(void)
 {
+
+rcc_periph_clock_enable(RCC_OTGHSULPI);
 	rcc_periph_clock_enable(RCC_OTGHS);
-	OTG_HS_GINTSTS = OTG_GINTSTS_MMIS;
 
-	OTG_HS_GUSBCFG |= OTG_GUSBCFG_PHYSEL;
-	/* Enable VBUS sensing in device mode and power down the PHY. */
-	OTG_HS_GCCFG |= OTG_GCCFG_VBUSBSEN | OTG_GCCFG_PWRDWN;
 
-	/* Wait for AHB idle. */
-	while (!(OTG_HS_GRSTCTL & OTG_GRSTCTL_AHBIDL));
-	/* Do core soft reset. */
-	OTG_HS_GRSTCTL |= OTG_GRSTCTL_CSRST;
-	while (OTG_HS_GRSTCTL & OTG_GRSTCTL_CSRST);
+    OTG_HS_GCCFG &= ~OTG_GCCFG_PWRDWN;
 
+	OTG_HS_GUSBCFG &= ~OTG_GUSBCFG_PHYSEL;
+	
+
+    OTG_HS_DCFG = OTG_DCFG_DSPD & ~OTG_DCFG_DSPD | 0x0;
+
+    OTG_HS_GUSBCFG  |= OTG_GUSBCFG_ULPIEVBUSD;
+
+    OTG_HS_GCCFG |= OTG_GCCFG_VBDEN;
 	/* Force peripheral only mode. */
 	OTG_HS_GUSBCFG |= OTG_GUSBCFG_FDMOD | OTG_GUSBCFG_TRDT_MASK;
 
-	/* Full speed device. */
-	OTG_HS_DCFG |= OTG_DCFG_DSPD;
+
+    while (!(OTG_HS_GRSTCTL & OTG_GRSTCTL_AHBIDL));
+
+    OTG_HS_GRSTCTL |= OTG_GRSTCTL_CSRST;
+
+    while (OTG_HS_GRSTCTL & OTG_GRSTCTL_CSRST);
+
+	/* Clear SDIS because newer version have set by default */
+    OTG_HS_DCTL &= ~OTG_DCTL_SDIS;
+
+	/* Force peripheral only mode. */
+    OTG_HS_GUSBCFG |= OTG_GUSBCFG_FDMOD | OTG_GUSBCFG_TRDT_MASK;
+    
+    OTG_HS_GINTSTS |= OTG_GINTSTS_MMIS;
 
 	/* Restart the PHY clock. */
-	OTG_HS_PCGCCTL = 0;
-
+    OTG_HS_PCGCCTL |= 0;
+    
 	OTG_HS_GRXFSIZ = stm32f207_usb_driver.rx_fifo_size;
 	usbd_dev.fifo_mem_top = stm32f207_usb_driver.rx_fifo_size;
 
@@ -86,7 +102,8 @@ static usbd_device *stm32f207_usbd_init(void)
 			 OTG_GINTMSK_USBSUSPM |
 			 OTG_GINTMSK_WUIM;
 	OTG_HS_DAINTMSK = 0xF;
-	OTG_HS_DIEPMSK = OTG_DIEPMSK_XFRCM;
+	OTG_HS_DIEPMSK = OTG_DIEPMSK_XFRCM | OTG_DIEPMSK_EPDM;
+	OTG_HS_DOEPMSK = OTG_DIEPMSK_XFRCM | OTG_DOEPMSK_BBLERR | OTG_DOEPMSK_STUPM | OTG_DOEPMSK_EPDM;
 
 	return &usbd_dev;
 }

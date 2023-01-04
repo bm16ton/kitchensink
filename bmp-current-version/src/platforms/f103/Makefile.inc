@@ -29,7 +29,6 @@ CFLAGS += -DF103
 VPATH += platforms/stm32
 
 SRC +=          \
-	usbuart.c 	\
 	serialno.c	\
 	timing.c	\
 	timing_stm32.c	\

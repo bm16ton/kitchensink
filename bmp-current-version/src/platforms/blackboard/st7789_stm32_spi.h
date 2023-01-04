@@ -135,71 +135,48 @@ SOFTWARE.
 
 //uint16_t tfttx[1024];
 #define ST_USE_SPI_DMA
-#define ST_SPI			SPI2
+#define ST_SPI			SPI3
 #ifdef ST_USE_SPI_DMA
-	#define ST_DMA			DMA1
+	#define ST_DMA			DMA2
 	#define ST_DMA_CHANNEL	3
 #endif
 
-#define ST_PORT			GPIOB
+#define ST_PORT			GPIOC
 
 #define ST_RST			GPIO3
-#define ST_DC			GPIO1
-#define ST_SDA			GPIO15
-#define ST_MISO			GPIO14
-#define ST_SCL			GPIO13
+//#define ST_DC			GPIO1
+#define DC_PORT	        GPIOB   
+#define ST_DC			GPIO8
+#define ST_SDA			GPIO12
+#define ST_MISO			GPIO11
+#define ST_SCL			GPIO10
 //#define ST_BLK			GPIO14
 // To use Chip Select (CS), uncomment `HAS_CS` above
-#define ST_CS			GPIO12
+#define ST_CS			GPIO15
 
 
-#define ST_DC_CMD			gpio_clear(GPIOB, ST_DC)
-#define ST_DC_DAT			gpio_set(GPIOB, ST_DC)
+#define ST_DC_CMD			gpio_clear(DC_PORT, ST_DC)
+#define ST_DC_DAT			gpio_set(DC_PORT, ST_DC)
 #define ST_RST_ACTIVE		gpio_clear(GPIOB, ST_RST)
 #define ST_RST_IDLE			gpio_set(GPIOB, ST_RST)
 #ifdef ST_HAS_CS
 	#define ST_CS_ACTIVE		{ \
 	                            gpio_set(GPIOB, GPIO9); \
-	                            gpio_clear(GPIOB, GPIO12); \
+	                            gpio_clear(GPIOA, GPIO15); \
 	                            } 
-	#define ST_CS_IDLE			gpio_set(GPIOB, GPIO12)
+	#define ST_CS_IDLE			gpio_set(GPIOA, GPIO15)
 #endif
 
 #define ST_CONFIG_GPIO_CLOCK()	{ \
 									rcc_periph_clock_enable(RCC_GPIOA); \
 									rcc_periph_clock_enable(RCC_GPIOB); \
 									rcc_periph_clock_enable(RCC_GPIOE); \
-									rcc_periph_clock_enable(RCC_SPI2); \
-									rcc_periph_clock_enable(RCC_DMA1); \
+									rcc_periph_clock_enable(RCC_SPI3); \
+									rcc_periph_clock_enable(RCC_DMA2); \
 								}
 
-	#define ST_CONFIG_GPIO()		{ \
-										/*Configure GPIO pins : PA2 PA3 PA4 PA5 PA7 */ \
-		gpio_mode_setup(GPIOB, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, ST_RST); \
-	gpio_set_output_options(GPIOB, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ,  \
-							ST_RST);                                  \
-			gpio_mode_setup(GPIOB, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, ST_DC); \
-	gpio_set_output_options(GPIOB, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ,  \
-							ST_DC);                                      \
-	gpio_mode_setup(GPIOB, GPIO_MODE_AF, GPIO_PUPD_NONE, ST_SDA | ST_SCL | ST_CS); \
-	gpio_set_af(GPIOA, GPIO_AF5, ST_SDA |ST_SCL | ST_CS);       \
-	gpio_set(GPIOB, ST_RST);                                       \
-	gpio_clear(GPIOB, ST_DC);                                        \
-	}
- 
 
-#define ST_CONFIG_SPI()			{ \
-									/* Reset SPI, SPI_CR1 register cleared, SPI is disabled */ \
-									spi_reset(ST_SPI); \
-									SPI_I2SCFGR(ST_SPI) = 0; \
-									/* Must use SPI_MODE = 2. (CPOL 1, CPHA 0) */\
-									/* Read about SPI MODEs: https://en.wikipedia.org/wiki/Serial_Peripheral_Interface*/ \
-									spi_init_master(ST_SPI, SPI_CR1_BAUDRATE_FPCLK_DIV_2, SPI_CR1_CPOL_CLK_TO_0_WHEN_IDLE, SPI_CR1_CPHA_CLK_TRANSITION_1, SPI_CR1_DFF_8BIT, SPI_CR1_MSBFIRST); \
-									spi_disable_crc(SPI2);   \
-									spi_enable_ss_output(SPI2); \
-									/* Enable SPI1 periph. */ \
-									spi_enable(ST_SPI); \
-								}
+
 
 
 #define ST_SWAP(a, b)		{uint16_t temp; temp = a; a = b; b = temp;}
@@ -214,7 +191,7 @@ SOFTWARE.
 //		 or uncomment TXE and BSY flag checks and comment out all nops.
 #define ST_WRITE_8BIT(d)	do{ \
 							/* SPI_DR(ST_SPI) = (uint8_t)(d); */\
-							spi_xfer(SPI2, d); \
+							spi_xfer(SPI3, d); \
 							/*while (!(SPI_SR(ST_SPI) & SPI_SR_TXE));*/ \
 							/*while (SPI_SR(ST_SPI) & SPI_SR_BSY);*/ \
 							__asm__("nop"); __asm__("nop"); __asm__("nop"); __asm__("nop"); \

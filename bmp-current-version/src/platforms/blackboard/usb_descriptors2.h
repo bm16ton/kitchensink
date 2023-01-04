@@ -59,7 +59,7 @@ const struct usb_endpoint_descriptor gpio_endpoint2 = {
 	.bEndpointAddress = 0x82,
 	.bmAttributes = USB_ENDPOINT_ATTR_INTERRUPT,
 	.wMaxPacketSize = 4,
-	.bInterval = 0x20,
+	.bInterval = 9,
 };
 
 const struct usb_interface_descriptor gpio_iface2 = {

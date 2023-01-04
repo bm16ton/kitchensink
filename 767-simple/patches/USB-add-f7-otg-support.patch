@@ -1,0 +1,52 @@
+From 5163b8567fa0181294a8714a2c6028fa63c57f2d Mon Sep 17 00:00:00 2001
+From: Manuel Bl <10954524+manuelbl@users.noreply.github.com>
+Date: Wed, 4 Nov 2020 23:00:44 +0100
+Subject: [PATCH] UBS OTG support for STM32F7 series
+
+---
+ include/libopencm3/usb/dwc/otg_fs.h | 2 +-
+ include/libopencm3/usb/dwc/otg_hs.h | 2 +-
+ lib/stm32/f7/Makefile               | 4 ++++
+ 3 files changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/include/libopencm3/usb/dwc/otg_fs.h b/include/libopencm3/usb/dwc/otg_fs.h
+index 6736c0eea4..b947774c0a 100644
+--- a/include/libopencm3/usb/dwc/otg_fs.h
++++ b/include/libopencm3/usb/dwc/otg_fs.h
+@@ -28,7 +28,7 @@
+ #include <libopencm3/usb/dwc/otg_common.h>
+ 
+ /* Memory map is required for USB_OTG_FS_BASE address */
+-#if defined(STM32F1) || defined(STM32F2) || defined(STM32F4)
++#if defined(STM32F1) || defined(STM32F2) || defined(STM32F4) || defined(STM32F7) || defined(STM32L4)
+ #	include <libopencm3/stm32/memorymap.h>
+ #elif defined(EFM32HG)
+ #	include <libopencm3/efm32/memorymap.h>
+diff --git a/include/libopencm3/usb/dwc/otg_hs.h b/include/libopencm3/usb/dwc/otg_hs.h
+index 7b5124cdd6..eee8a7e638 100644
+--- a/include/libopencm3/usb/dwc/otg_hs.h
++++ b/include/libopencm3/usb/dwc/otg_hs.h
+@@ -28,7 +28,7 @@
+ #include <libopencm3/usb/dwc/otg_common.h>
+ 
+ /* Memory map is required for USB_OTG_HS_BASE address */
+-#if defined(STM32F2) || defined(STM32F4)
++#if defined(STM32F2) || defined(STM32F4) || defined(STM32F7)
+ #	include <libopencm3/stm32/memorymap.h>
+ #else
+ #	error "device family not supported by dwc/otg_hs."
+diff --git a/lib/stm32/f7/Makefile b/lib/stm32/f7/Makefile
+index 30c6c44b39..0caed49efb 100644
+--- a/lib/stm32/f7/Makefile
++++ b/lib/stm32/f7/Makefile
+@@ -63,6 +63,10 @@ OBJS += spi_common_all.o spi_common_v2.o
+ OBJS += timer_common_all.o
+ OBJS += usart_common_all.o usart_common_v2.o
+ 
++OBJS += usb.o usb_standard.o usb_control.o usb_msc.o
++OBJS += usb_hid.o
++OBJS += usb_dwc_common.o usb_f107.o usb_f207.o
++
+ # Ethernet
+ OBJS += mac.o phy.o mac_stm32fxx7.o phy_ksz80x1.o
+ 

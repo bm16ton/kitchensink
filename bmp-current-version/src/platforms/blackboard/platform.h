@@ -53,7 +53,7 @@
 #define TMS_PORT	JTAG_PORT
 #define TCK_PORT	JTAG_PORT
 #define TDO_PORT	GPIOC
-#define TDI_PIN		GPIO2
+#define TDI_PIN		GPIO7
 #define TMS_PIN		GPIO4
 #define TCK_PIN		GPIO5
 #define TDO_PIN		GPIO6
@@ -160,9 +160,9 @@
 	gpio_set_af(USBUSART_PORT, GPIO_AF7, USBUSART_RX_PIN); \
 } while(0)
 
-#define USB_DRIVER      stm32f107_usb_driver
-#define USB_IRQ         NVIC_OTG_FS_IRQ
-#define USB_ISR(x)      otg_fs_isr(x)
+#define USB_DRIVER      stm32f207_usb_driver
+#define USB_IRQ         NVIC_OTG_HS_IRQ
+#define USB_ISR(x)      otg_hs_isr(x)
 /* Interrupt priorities.  Low numbers are high priority.
  * TIM3 is used for traceswo capture and must be highest priority.
  */

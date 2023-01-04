@@ -1003,6 +1003,7 @@ delay(170);
  
   
   _st_write_command_8bit(0x29);    //Display on
+  st_set_address_window(0, 0, st_tftheight-1, st_tftwidth-1);
 }
 
 void _st_fixed_delay()

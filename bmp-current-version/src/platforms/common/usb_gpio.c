@@ -92,7 +92,7 @@ static void irq_pin_init(void)
 {
 //    nvic_disable_irq(NVIC_EXTI0_IRQ);
     #ifdef ENABLE_NEOPIXEL
-    ws2812_write_rgb(SPI1, 220, 180, 0);
+//    ws2812_write_rgb(SPI1, 220, 180, 0);
     #endif
 	my_delay_2();
     nvic_enable_irq(NVIC_EXTI4_IRQ);					
@@ -118,7 +118,7 @@ static void irq_pin_init(void)
 {
 //    nvic_disable_irq(NVIC_EXTI0_IRQ);
     #ifdef ENABLE_NEOPIXEL
-    ws2812_write_rgb(SPI1, 220, 180, 0);
+//    ws2812_write_rgb(SPI1, 220, 180, 0);
     #endif
 	my_delay_2();
     nvic_enable_irq(NVIC_EXTI4_IRQ);					
@@ -144,7 +144,7 @@ static void irq_pin_init(void)
 {
 //    nvic_disable_irq(NVIC_EXTI0_IRQ);
 #ifdef ENABLE_NEOPIXEL
-    ws2812_write_rgb(SPI1, 220, 180, 0);
+//    ws2812_write_rgb(SPI1, 220, 180, 0);
 #endif
 	my_delay_2();
     nvic_enable_irq(NVIC_EXTI3_IRQ);					
@@ -810,7 +810,7 @@ void exti4_isr(void)
     // char buf2[64] __attribute__ ((aligned(4)));
     uint8_t buft[4] __attribute__ ((aligned(2))) = {3, 3, 3, 3};
     #ifdef ENABLE_NEOPIXEL
-    ws2812_write_rgb(SPI1, 220, 0, 220);
+//   ws2812_write_rgb(SPI1, 220, 0, 220);
     #endif
 	exti_reset_request(EXTI4);
 //	usbd_ep_write_packet(usbd_device usbd_dev, 0x83, buf2, 64);
@@ -826,7 +826,7 @@ void exti4_isr(void)
     // char buf2[64] __attribute__ ((aligned(4)));
     uint8_t buft[4] __attribute__ ((aligned(2))) = {3, 3, 3, 3};
     #ifdef ENABLE_NEOPIXEL
-    ws2812_write_rgb(SPI1, 220, 0, 220);
+ //   ws2812_write_rgb(SPI1, 220, 0, 220);
     #endif
 	exti_reset_request(EXTI4);
 //	usbd_ep_write_packet(usbd_device usbd_dev, 0x83, buf2, 64);

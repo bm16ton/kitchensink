@@ -1,0 +1,59 @@
+From 2b603ff2af1ca41af5dc48c3b3e237a9cee9e7e7 Mon Sep 17 00:00:00 2001
+From: Manuel Bl <10954524+manuelbl@users.noreply.github.com>
+Date: Sat, 10 Oct 2020 21:12:04 +0200
+Subject: [PATCH] Disable VBUS sensing
+
+---
+ include/libopencm3/usb/dwc/otg_common.h |  2 ++
+ lib/usb/usb_f107.c                      | 17 +++++++++++++----
+ 2 files changed, 15 insertions(+), 4 deletions(-)
+
+diff --git a/include/libopencm3/usb/dwc/otg_common.h b/include/libopencm3/usb/dwc/otg_common.h
+index 8a703713b4..49efa9fa1e 100644
+--- a/include/libopencm3/usb/dwc/otg_common.h
++++ b/include/libopencm3/usb/dwc/otg_common.h
+@@ -99,6 +99,8 @@
+ #define OTG_GOTGCTL_HSHNPEN		(1 << 10)
+ #define OTG_GOTGCTL_HNPRQ		(1 << 9)
+ #define OTG_GOTGCTL_HNGSCS		(1 << 8)
++#define OTG_GOTGCTL_BVALOVAL	(1 << 7)
++#define OTG_GOTGCTL_BVALOEN		(1 << 6)
+ #define OTG_GOTGCTL_SRQ			(1 << 1)
+ #define OTG_GOTGCTL_SRQSCS		(1 << 0)
+ 
+diff --git a/lib/usb/usb_f107.c b/lib/usb/usb_f107.c
+index 52df7172a6..e80e638307 100644
+--- a/lib/usb/usb_f107.c
++++ b/lib/usb/usb_f107.c
+@@ -17,6 +17,12 @@
+  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
+  */
+ 
++/*
++ * USB full-speed driver and peripheral initialization for STM32
++ * F1, F2 and F4 series with a OTG full-speed USB peripheral.
++ * The code support USB device mode only.
++ */
++
+ #include <string.h>
+ #include <libopencm3/cm3/common.h>
+ #include <libopencm3/stm32/tools.h>
+@@ -63,11 +69,14 @@ static usbd_device *stm32f107_usbd_init(void)
+ 	while (OTG_FS_GRSTCTL & OTG_GRSTCTL_CSRST);
+ 
+ 	if (OTG_FS_CID >= OTG_CID_HAS_VBDEN) {
+-		/* Enable VBUS detection in device mode and power up the PHY. */
+-		OTG_FS_GCCFG |= OTG_GCCFG_VBDEN | OTG_GCCFG_PWRDWN;
++		/* Disable VBUS sensing and power up the PHY. */
++		OTG_FS_GCCFG |= OTG_GCCFG_PWRDWN;
++		OTG_FS_GCCFG &= ~OTG_GCCFG_VBDEN;
++		OTG_FS_GOTGCTL |= OTG_GOTGCTL_BVALOEN| OTG_GOTGCTL_BVALOVAL;
+ 	} else {
+-		/* Enable VBUS sensing in device mode and power up the PHY. */
+-		OTG_FS_GCCFG |= OTG_GCCFG_VBUSBSEN | OTG_GCCFG_PWRDWN;
++		/* Disable VBUS sensing and power up the PHY. */
++		OTG_FS_GCCFG |= OTG_GCCFG_NOVBUSSENS | OTG_GCCFG_PWRDWN;
++		OTG_FS_GCCFG &= ~(OTG_GCCFG_VBUSBSEN | OTG_GCCFG_VBUSASEN);
+ 	}
+ 	/* Explicitly enable DP pullup (not all cores do this by default) */
+ 	OTG_FS_DCTL &= ~OTG_DCTL_SDIS;

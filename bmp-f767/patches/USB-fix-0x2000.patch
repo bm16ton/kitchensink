@@ -1,0 +1,74 @@
+From e45b459270f3c53a5962338e7de4fed11e8fe9d3 Mon Sep 17 00:00:00 2001
+From: Manuel Bl <10954524+manuelbl@users.noreply.github.com>
+Date: Sun, 25 Oct 2020 19:40:55 +0100
+Subject: [PATCH] Fix broken USB for DWC 0x2000
+
+---
+ include/libopencm3/usb/dwc/otg_common.h |  1 +
+ lib/usb/usb_control.c                   |  5 -----
+ lib/usb/usb_dwc_common.c                | 10 ++++++++++
+ 3 files changed, 11 insertions(+), 5 deletions(-)
+
+diff --git a/include/libopencm3/usb/dwc/otg_common.h b/include/libopencm3/usb/dwc/otg_common.h
+index 8a703713b4..c10df63b85 100644
+--- a/include/libopencm3/usb/dwc/otg_common.h
++++ b/include/libopencm3/usb/dwc/otg_common.h
+@@ -233,6 +233,7 @@
+ 
+ /* OTG FS Product ID register (OTG_CID) */
+ #define OTG_CID_HAS_VBDEN	0x00002000
++#define OTG_CID_CNAK_EARLY	0x00002000
+ 
+ /* Device-mode CSRs */
+ /* OTG device control register (OTG_DCTL) */
+diff --git a/lib/usb/usb_control.c b/lib/usb/usb_control.c
+index dce1530f25..52db4114a4 100644
+--- a/lib/usb/usb_control.c
++++ b/lib/usb/usb_control.c
+@@ -212,8 +212,6 @@ static void usb_control_setup_write(usbd_device *usbd_dev,
+ 	} else {
+ 		usbd_dev->control_state.state = LAST_DATA_OUT;
+ 	}
+-
+-	usbd_ep_nak_set(usbd_dev, 0, 0);
+ }
+ 
+ /* Do not appear to belong to the API, so are omitted from docs */
+@@ -226,8 +224,6 @@ void _usbd_control_setup(usbd_device *usbd_dev, uint8_t ea)
+ 
+ 	usbd_dev->control_state.complete = NULL;
+ 
+-	usbd_ep_nak_set(usbd_dev, 0, 1);
+-
+ 	if (usbd_ep_read_packet(usbd_dev, 0, req, 8) != 8) {
+ 		stall_transaction(usbd_dev);
+ 		return;
+@@ -299,7 +295,6 @@ void _usbd_control_in(usbd_device *usbd_dev, uint8_t ea)
+ 		break;
+ 	case LAST_DATA_IN:
+ 		usbd_dev->control_state.state = STATUS_OUT;
+-		usbd_ep_nak_set(usbd_dev, 0, 0);
+ 		break;
+ 	case STATUS_IN:
+ 		if (usbd_dev->control_state.complete) {
+diff --git a/lib/usb/usb_dwc_common.c b/lib/usb/usb_dwc_common.c
+index 11af260959..ab476dbb1d 100644
+--- a/lib/usb/usb_dwc_common.c
++++ b/lib/usb/usb_dwc_common.c
+@@ -393,6 +393,16 @@ void dwc_poll(usbd_device *usbd_dev)
+ 		if (usbd_dev->user_callback_ctr[ep][type]) {
+ 			usbd_dev->user_callback_ctr[ep][type] (usbd_dev, ep);
+ 		}
++		/* Cores with ID 0x2000 require to have NAK cleared early.
++		 * Otherwise they never reach the "OUT transfer completed"
++		 * / "SETUP transaction completed" state.
++		 * If NAK is cleared early on cores with ID 0x1200, they drop
++		 * data.
++		 */
++		if (REBASE(OTG_CID) >= OTG_CID_CNAK_EARLY) {
++			REBASE(OTG_DOEPCTL(ep)) |= usbd_dev->force_nak[ep] ?
++					OTG_DOEPCTL0_SNAK : OTG_DOEPCTL0_CNAK;
++		}
+ 
+ 		/* Discard unread packet data. */
+ 		for (i = 0; i < usbd_dev->rxbcnt; i += 4) {

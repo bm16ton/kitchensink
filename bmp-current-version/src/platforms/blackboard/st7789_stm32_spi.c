@@ -863,90 +863,91 @@ void st_rotate_display(uint8_t rotation)
 static void spi_init(void)
 {
     // Set pin mode for SPI managed pins to alternate function
-    gpio_mode_setup(GPIOB, GPIO_MODE_AF, GPIO_PUPD_NONE,
-        ST_SCL		  // SCK - serial clock
-        | ST_SDA	  // MOSI - master out slave in
-        | ST_CS	  // NSS - slave select
+    gpio_mode_setup(GPIOC, GPIO_MODE_AF, GPIO_PUPD_NONE,
+        ST_SDA	  // MOSI - master out slave in
         | ST_MISO //miso
+        | ST_SCL		  // SCK - serial clock
 //       | TS_CS_PIN  // gpio A9
     );
 
-    // Set alternate function for SPI managed pins to AF5 for SPI2
-    gpio_set_af(GPIOB, GPIO_AF5,
-        ST_SCL       // SPI2_SCK
-        | ST_SDA    // SPI2_MOSI
-        | ST_CS     // SPI2_NSS
+    // Set alternate function for SPI managed pins to AF5 for SPI3
+    gpio_set_af(GPIOC, GPIO_AF6,
+        ST_SDA    // SPI3_MOSI
         | ST_MISO //miso
+        | ST_SCL		  // SCK - serial clock
 //        | TS_CS_PIN  // gpio A9
     );
 
+    gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, ST_CS);  
+    gpio_set_af(GPIOA, GPIO_AF6, ST_CS);
+    gpio_clear(GPIOA, ST_CS); 
     gpio_mode_setup(GPIOB, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO9);
 	gpio_set_output_options(GPIOB, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ,
 							GPIO9);
 	gpio_set(GPIOB, GPIO9);
     // Enable SPI periperal clock
-    rcc_periph_clock_enable(RCC_SPI2);
+    rcc_periph_clock_enable(RCC_SPI3);
 
-    // Initialize SPI2 as master
+    // Initialize SPI3 as master
     spi_init_master(
-        SPI2,
+        SPI3,
         SPI_CR1_BAUDRATE_FPCLK_DIV_2,
         SPI_CR1_CPOL_CLK_TO_0_WHEN_IDLE,   // CPOL: Clock low when idle
         SPI_CR1_CPHA_CLK_TRANSITION_1,     // CPHA: Clock phase: read on rising edge of clock
         SPI_CR1_DFF_8BIT,
         SPI_CR1_MSBFIRST);
 
-    spi_set_full_duplex_mode(SPI2);
-    spi_disable_crc(SPI2);
-    spi_enable_software_slave_management(SPI2);
-    spi_set_nss_high(SPI2);
-    SPI_I2SCFGR(SPI2) &= ~SPI_I2SCFGR_I2SMOD;
+    spi_set_full_duplex_mode(SPI3);
+    spi_disable_crc(SPI3);
+    spi_enable_software_slave_management(SPI3);
+    spi_set_nss_high(SPI3);
+    SPI_I2SCFGR(SPI3) &= ~SPI_I2SCFGR_I2SMOD;
     // Have SPI peripheral manage NSS pin (pulled low when SPI enabled)
-    spi_enable_ss_output(SPI2);
+    spi_enable_ss_output(SPI3);
     gpio_set(GPIOB, GPIO9);
-    spi_enable(SPI2);
+    spi_enable(SPI3);
 }
 
 
 void tftdma(void) {
      rcc_periph_clock_enable(RCC_SYSCFG);
     rcc_periph_clock_enable(RCC_DMA1);
-	nvic_enable_irq(NVIC_DMA1_STREAM4_IRQ);
-	dma_stream_reset(DMA1, DMA_STREAM4);
-	dma_set_priority(DMA1, DMA_STREAM4, DMA_SxCR_PL_HIGH);
-	dma_set_memory_size(DMA1, DMA_STREAM4, DMA_SxCR_MSIZE_8BIT);
-	dma_set_peripheral_size(DMA1, DMA_STREAM4, DMA_SxCR_PSIZE_8BIT);
-	dma_enable_memory_increment_mode(DMA1, DMA_STREAM4);
-	dma_disable_peripheral_increment_mode(DMA1, DMA_STREAM4);
-//	dma_enable_circular_mode(DMA1, DMA_STREAM4);
-	dma_set_transfer_mode(DMA1, DMA_STREAM4, DMA_SxCR_DIR_MEM_TO_PERIPHERAL);
-	dma_set_peripheral_address(DMA1, DMA_STREAM4, (uint32_t) &SPI_DR(SPI2));
-	dma_set_memory_address(DMA1, DMA_STREAM4, (uint32_t) 0);
-	dma_set_number_of_data(DMA1, DMA_STREAM4, 0);
-//	dma_set_memory_address(DMA1, DMA_STREAM4, (uint32_t) tfttx);
-//	dma_set_number_of_data(DMA1, DMA_STREAM4, 1024);
-//	dma_enable_half_transfer_interrupt(DMA1, DMA_STREAM4);
-//	dma_enable_transfer_complete_interrupt(DMA1, DMA_STREAM4);
+	nvic_enable_irq(NVIC_DMA1_STREAM5_IRQ);
+	dma_stream_reset(DMA1, DMA_STREAM5);
+	dma_set_priority(DMA1, DMA_STREAM5, DMA_SxCR_PL_HIGH);
+	dma_set_memory_size(DMA1, DMA_STREAM5, DMA_SxCR_MSIZE_8BIT);
+	dma_set_peripheral_size(DMA1, DMA_STREAM5, DMA_SxCR_PSIZE_8BIT);
+	dma_enable_memory_increment_mode(DMA1, DMA_STREAM5);
+	dma_disable_peripheral_increment_mode(DMA1, DMA_STREAM5);
+//	dma_enable_circular_mode(DMA1, DMA_STREAM5);
+	dma_set_transfer_mode(DMA1, DMA_STREAM5, DMA_SxCR_DIR_MEM_TO_PERIPHERAL);
+	dma_set_peripheral_address(DMA1, DMA_STREAM5, (uint32_t) &SPI_DR(SPI3));
+	dma_set_memory_address(DMA1, DMA_STREAM5, (uint32_t) 0);
+	dma_set_number_of_data(DMA1, DMA_STREAM5, 0);
+//	dma_set_memory_address(DMA1, DMA_STREAM5, (uint32_t) tfttx);
+//	dma_set_number_of_data(DMA1, DMA_STREAM5, 1024);
+//	dma_enable_half_transfer_interrupt(DMA1, DMA_STREAM5);
+//	dma_enable_transfer_complete_interrupt(DMA1, DMA_STREAM5);
 	
-//	dma_enable_stream(DMA1, DMA_STREAM4); 
-//	spi_enable_tx_dma(SPI2);
-//    nvic_enable_irq(NVIC_DMA1_STREAM4_IRQ);
-    dma_enable_transfer_complete_interrupt(DMA1, DMA_STREAM4);
-    dma_channel_select(DMA1, DMA_STREAM4, DMA_SxCR_CHSEL_0);
-    dma_enable_stream(DMA1, DMA_STREAM4);
+//	dma_enable_stream(DMA1, DMA_STREAM5); 
+//	spi_enable_tx_dma(SPI3);
+//    nvic_enable_irq(NVIC_DMA1_STREAM5_IRQ);
+    dma_enable_transfer_complete_interrupt(DMA1, DMA_STREAM5);
+    dma_channel_select(DMA1, DMA_STREAM5, DMA_SxCR_CHSEL_0);
+    dma_enable_stream(DMA1, DMA_STREAM5);
 }
  
-void dma1_stream4_isr(void) {
+void dma1_stream5_isr(void) {
 //printf("start of dma irq\n");
-if (dma_get_interrupt_flag(DMA1, DMA_STREAM4, DMA_TCIF)) {
-    dma_clear_interrupt_flags(DMA1, DMA_STREAM4, DMA_TCIF);
+if (dma_get_interrupt_flag(DMA1, DMA_STREAM5, DMA_TCIF)) {
+    dma_clear_interrupt_flags(DMA1, DMA_STREAM5, DMA_TCIF);
     }
-    while (SPI_SR(SPI2) & SPI_SR_BSY);
+    while (SPI_SR(SPI3) & SPI_SR_BSY);
         ;
 
         // Turn our DMA channel back off, in preparation of the next transfer
-        spi_disable_tx_dma(SPI2);
-        dma_disable_stream(DMA1, DMA_STREAM4);
+        spi_disable_tx_dma(SPI3);
+        dma_disable_stream(DMA1, DMA_STREAM5);
         ST_CS_IDLE;
 //printf("end of dma irq\n");        
     
@@ -959,52 +960,52 @@ void dma_start(void *tfttx, size_t data_size) {
     // completed and the channel is disabled before you start another transfer.
     // Tell the DMA controller to start reading memory data from this address
     
-    dma_set_memory_address(DMA1, DMA_STREAM4, (uint32_t) tfttx);
+    dma_set_memory_address(DMA1, DMA_STREAM5, (uint32_t) tfttx);
     // Configure the number of bytes to transfer
-    dma_set_number_of_data(DMA1, DMA_STREAM4, data_size);
+    dma_set_number_of_data(DMA1, DMA_STREAM5, data_size);
 //    printf("start of dma_start datasize = %d\n", data_size);
     ST_DC_DAT;
     // Since we're manually controlling our register clock, move it low now
 	ST_CS_ACTIVE;
     // Enable the DMA channel.
-	dma_enable_stream(DMA1, DMA_STREAM4);
+	dma_enable_stream(DMA1, DMA_STREAM5);
     // Finally, enable SPI DMA transmit. This call is what actually starts the
     // DMA transfer.
-    spi_enable_tx_dma(SPI2);
+    spi_enable_tx_dma(SPI3);
 	for (unsigned i = 0; i < 200; i++)
 	  {
 		__asm__("nop");
 	  }
 	  
-	uint8_t temp = SPI_DR(SPI2);
+	uint8_t temp = SPI_DR(SPI3);
 	  if (temp) {
 	    ;
     }
-	  temp = SPI_SR(SPI2);
+	  temp = SPI_SR(SPI3);
 	  if (temp) {
 	    ;
     }
-    while (!(SPI_SR(SPI2) & SPI_SR_TXE));
+    while (!(SPI_SR(SPI3) & SPI_SR_TXE));
     
-    while (SPI_SR(SPI2) & SPI_SR_BSY) {
+    while (SPI_SR(SPI3) & SPI_SR_BSY) {
         ;
     }
     
 
-//    while(DMA_SCR(DMA1, DMA_STREAM4) & DMA_SxCR_EN) {
+//    while(DMA_SCR(DMA1, DMA_STREAM5) & DMA_SxCR_EN) {
 //    ;
 //    }
     
-//    while (DMA_SNDTR(SPI2, DMA_STREAM4)) {
+//    while (DMA_SNDTR(SPI3, DMA_STREAM5)) {
 //    ;
 //    }
     
-//    while (SPI_SR(SPI2) & SPI_SR_BSY) {
+//    while (SPI_SR(SPI3) & SPI_SR_BSY) {
 //        ;
 //    }
        
-//       spi_disable_tx_dma(SPI2);
-       dma_disable_stream(DMA1, DMA_STREAM4);
+//       spi_disable_tx_dma(SPI3);
+       dma_disable_stream(DMA1, DMA_STREAM5);
        ST_CS_IDLE;    
 //     printf("end of dma_start\n");
 }
@@ -1013,9 +1014,11 @@ static void gpio_setup(void)
 {
     // Enable GPIOB clock
     rcc_periph_clock_enable(RCC_GPIOB);
-
-    gpio_mode_setup(GPIOB, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, ST_DC);
-    gpio_clear(GPIOB, ST_DC);
+    rcc_periph_clock_enable(RCC_GPIOD);
+    gpio_mode_setup(DC_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, ST_DC);
+    gpio_clear(DC_PORT, ST_DC);
+//    gpio_mode_setup(GPIOD, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO7);
+//    gpio_set(GPIOD, GPIO7);
 }
 
 /**
@@ -1023,7 +1026,7 @@ static void gpio_setup(void)
  */
 void st_init()
 {
-    rcc_periph_clock_enable(RCC_SPI2);
+    rcc_periph_clock_enable(RCC_SPI3);
 	// Set gpio clock
 	ST_CONFIG_GPIO_CLOCK();
 	// Configure gpio output dir and mode
@@ -1032,10 +1035,12 @@ void st_init()
 	spi_init();
 
 		ST_CS_ACTIVE;
-
-
-delay(120);
-delay(17);
+    delay(100);
+//    spi_set_baudrate_prescaler(SPI3, SPI_CR1_BR_FPCLK_DIV_16);
+//    gpio_clear(GPIOD, GPIO7);
+//    delay(120);
+//    gpio_set(GPIOD, GPIO7);
+//    delay(150);
     _st_write_command_16bit(0x01); // SW reset
 
 //    _st_write_command_16bit(0x01); // SW reset

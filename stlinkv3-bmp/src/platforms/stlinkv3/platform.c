@@ -178,7 +178,7 @@ void platform_request_boot(void)
 void platform_init(void)
 {
 	rcc_periph_clock_enable(RCC_APB2ENR_SYSCFGEN);
-	rcc_clock_setup_hse(rcc_3v3 + RCC_CLOCK_3V3_216MHZ, 25);
+	rcc_clock_setup_hse(rcc_3v3 + RCC_CLOCK_3V3_216MHZ, 8);
 	SCB_EnableICache();
 	SCB_EnableDCache();
 	rcc_periph_clock_enable(RCC_GPIOA);
@@ -218,32 +218,14 @@ void platform_init(void)
 	gpio_set_output_options(TMS_DRIVE_PORT, GPIO_OTYPE_PP, GPIO_OSPEED_2MHZ, TMS_DRIVE_PIN);
 	gpio_set(TMS_DRIVE_PORT, TMS_DRIVE_PIN);
 
-#define PWR_EN_PORT GPIOB
-#define PWR_EN_PIN  GPIO0
-	gpio_mode_setup(PWR_EN_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, PWR_EN_PIN);
-	gpio_set_output_options(PWR_EN_PORT, GPIO_OTYPE_PP, GPIO_OSPEED_2MHZ, PWR_EN_PIN);
-	gpio_set(PWR_EN_PORT, PWR_EN_PIN);
 
 	/* Set up MCO at 8 MHz on PA8 */
-#define MCO1_PORT GPIOA
-#define MCO1_PIN  GPIO8
-#define MCO1_AF   0
-	gpio_set_af    (MCO1_PORT, MCO1_AF, MCO1_PIN);
-	gpio_mode_setup(MCO1_PORT, GPIO_MODE_AF, GPIO_PUPD_NONE, MCO1_PIN);
-	gpio_set_output_options(MCO1_PORT, GPIO_OTYPE_PP, GPIO_OSPEED_25MHZ, MCO1_PIN);
-	RCC_CR |= RCC_CR_HSION;
-	RCC_CFGR &= ~(0x3 << RCC_CFGR_MCO1_SHIFT);
-	RCC_CFGR |= RCC_CFGR_MCO1_HSI << RCC_CFGR_MCO1_SHIFT;
-	RCC_CFGR &= ~(0x7 << RCC_CFGR_MCO1PRE_SHIFT);
-	RCC_CFGR |= RCC_CFGR_MCOPRE_DIV_2 << RCC_CFGR_MCO1PRE_SHIFT;
+
 
 	/* Set up green/red led to steady green to indicate application active
 	 * FIXME: Allow RED and yellow constant and blinking,
 	 * e.g. by PWM onTIM1_CH3 (PA10)
 	 */
-	gpio_mode_setup(LED_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, LED_PIN);
-	gpio_set_output_options(LED_PORT, GPIO_OTYPE_PP, GPIO_OSPEED_2MHZ,
-							LED_PIN);
 
 	/* CAN Pins
 	 * Configure CAN pin: Slow.  OD and  PullUp for now.

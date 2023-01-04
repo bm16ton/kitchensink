@@ -27,11 +27,11 @@
 extern usbd_device *usbdev;
 extern uint16_t usb_config;
 
-#if defined(USB_HS)
-# define CDCACM_PACKET_SIZE    512
-#else
-# define CDCACM_PACKET_SIZE     64
-#endif
+//#if defined(USB_HS)
+#define CDCACM_PACKET_SIZE    512
+//#else
+//# define CDCACM_PACKET_SIZE     64
+//#endif
 
 
 #ifndef STLINKV3

@@ -1,8 +1,8 @@
-cmd_/home/maddocks/USB-GPIO/hybrid-usb/git/skel-wrking-adc-bulk/usb-skeleton.o := gcc -Wp,-MMD,/home/maddocks/USB-GPIO/hybrid-usb/git/skel-wrking-adc-bulk/.usb-skeleton.o.d  -nostdinc -I./arch/arm64/include -I./arch/arm64/include/generated  -I./include -I./arch/arm64/include/uapi -I./arch/arm64/include/generated/uapi -I./include/uapi -I./include/generated/uapi -include ./include/linux/compiler-version.h -include ./include/linux/kconfig.h -include ./include/linux/compiler_types.h -D__KERNEL__ -mlittle-endian -DCC_USING_PATCHABLE_FUNCTION_ENTRY -DKASAN_SHADOW_SCALE_SHIFT= -fmacro-prefix-map=./= -Wall -Wundef -Werror=strict-prototypes -Wno-trigraphs -fno-strict-aliasing -fno-common -fshort-wchar -fno-PIE -Werror=implicit-function-declaration -Werror=implicit-int -Werror=return-type -Wno-format-security -std=gnu11 -mgeneral-regs-only -DCONFIG_CC_HAS_K_CONSTRAINT=1 -Wno-psabi -mabi=lp64 -fno-asynchronous-unwind-tables -fno-unwind-tables -mbranch-protection=pac-ret+leaf -Wa,-march=armv8.5-a -DARM64_ASM_ARCH='"armv8.5-a"' -DKASAN_SHADOW_SCALE_SHIFT= -fno-delete-null-pointer-checks -Wno-frame-address -Wno-format-truncation -Wno-format-overflow -Wno-address-of-packed-member -O2 --param=allow-store-data-races=0 -Wframe-larger-than=2048 -fstack-protector-strong -Wimplicit-fallthrough=5 -Wno-main -Wno-unused-but-set-variable -Wno-unused-const-variable -fno-omit-frame-pointer -fno-optimize-sibling-calls -fno-stack-clash-protection -fpatchable-function-entry=2 -Wdeclaration-after-statement -Wvla -Wno-pointer-sign -Wcast-function-type -Wno-stringop-truncation -Wno-stringop-overflow -Wno-restrict -Wno-maybe-uninitialized -Wno-alloc-size-larger-than -fno-strict-overflow -fno-stack-check -fconserve-stack -Werror=date-time -Werror=incompatible-pointer-types -Werror=designated-init -Wno-packed-not-aligned -mstack-protector-guard=sysreg -mstack-protector-guard-reg=sp_el0 -mstack-protector-guard-offset=1400  -DMODULE  -DKBUILD_BASENAME='"usb_skeleton"' -DKBUILD_MODNAME='"usb_skeleton"' -D__KBUILD_MODNAME=kmod_usb_skeleton -c -o /home/maddocks/USB-GPIO/hybrid-usb/git/skel-wrking-adc-bulk/usb-skeleton.o /home/maddocks/USB-GPIO/hybrid-usb/git/skel-wrking-adc-bulk/usb-skeleton.c  
+cmd_/home/maddocks/USB-GPIO/hybrid/skel-wrking-adc-bulk/usb-skeleton.o := gcc -Wp,-MMD,/home/maddocks/USB-GPIO/hybrid/skel-wrking-adc-bulk/.usb-skeleton.o.d  -nostdinc -I./arch/arm64/include -I./arch/arm64/include/generated  -I./include -I./arch/arm64/include/uapi -I./arch/arm64/include/generated/uapi -I./include/uapi -I./include/generated/uapi -include ./include/linux/compiler-version.h -include ./include/linux/kconfig.h -include ./include/linux/compiler_types.h -D__KERNEL__ -mlittle-endian -DCC_USING_PATCHABLE_FUNCTION_ENTRY -DKASAN_SHADOW_SCALE_SHIFT= -fmacro-prefix-map=./= -Wall -Wundef -Werror=strict-prototypes -Wno-trigraphs -fno-strict-aliasing -fno-common -fshort-wchar -fno-PIE -Werror=implicit-function-declaration -Werror=implicit-int -Werror=return-type -Wno-format-security -std=gnu11 -mgeneral-regs-only -DCONFIG_CC_HAS_K_CONSTRAINT=1 -Wno-psabi -mabi=lp64 -fno-asynchronous-unwind-tables -fno-unwind-tables -mbranch-protection=pac-ret+leaf -Wa,-march=armv8.5-a -DARM64_ASM_ARCH='"armv8.5-a"' -DKASAN_SHADOW_SCALE_SHIFT= -fno-delete-null-pointer-checks -Wno-frame-address -Wno-format-truncation -Wno-format-overflow -Wno-address-of-packed-member -O2 --param=allow-store-data-races=0 -Wframe-larger-than=2048 -fstack-protector-strong -Wno-main -Wno-unused-but-set-variable -Wno-unused-const-variable -fno-omit-frame-pointer -fno-optimize-sibling-calls -fno-stack-clash-protection -fpatchable-function-entry=2 -Wdeclaration-after-statement -Wvla -Wno-pointer-sign -Wcast-function-type -Wno-stringop-truncation -Wno-stringop-overflow -Wno-restrict -Wno-maybe-uninitialized -Wno-alloc-size-larger-than -Wimplicit-fallthrough=5 -fno-strict-overflow -fno-stack-check -fconserve-stack -Werror=date-time -Werror=incompatible-pointer-types -Werror=designated-init -Wno-packed-not-aligned -mstack-protector-guard=sysreg -mstack-protector-guard-reg=sp_el0 -mstack-protector-guard-offset=1352  -DMODULE  -DKBUILD_BASENAME='"usb_skeleton"' -DKBUILD_MODNAME='"usb_skeleton"' -D__KBUILD_MODNAME=kmod_usb_skeleton -c -o /home/maddocks/USB-GPIO/hybrid/skel-wrking-adc-bulk/usb-skeleton.o /home/maddocks/USB-GPIO/hybrid/skel-wrking-adc-bulk/usb-skeleton.c  
 
-source_/home/maddocks/USB-GPIO/hybrid-usb/git/skel-wrking-adc-bulk/usb-skeleton.o := /home/maddocks/USB-GPIO/hybrid-usb/git/skel-wrking-adc-bulk/usb-skeleton.c
+source_/home/maddocks/USB-GPIO/hybrid/skel-wrking-adc-bulk/usb-skeleton.o := /home/maddocks/USB-GPIO/hybrid/skel-wrking-adc-bulk/usb-skeleton.c
 
-deps_/home/maddocks/USB-GPIO/hybrid-usb/git/skel-wrking-adc-bulk/usb-skeleton.o := \
+deps_/home/maddocks/USB-GPIO/hybrid/skel-wrking-adc-bulk/usb-skeleton.o := \
   include/linux/compiler-version.h \
     $(wildcard include/config/CC_VERSION_TEXT) \
   include/linux/kconfig.h \
@@ -74,7 +74,6 @@ deps_/home/maddocks/USB-GPIO/hybrid-usb/git/skel-wrking-adc-bulk/usb-skeleton.o 
     $(wildcard include/config/TRACE_BRANCH_PROFILING) \
     $(wildcard include/config/PROFILE_ALL_BRANCHES) \
     $(wildcard include/config/OBJTOOL) \
-    $(wildcard include/config/CFI_CLANG) \
   arch/arm64/include/asm/rwonce.h \
     $(wildcard include/config/LTO) \
     $(wildcard include/config/AS_HAS_LDAPR) \
@@ -142,6 +141,8 @@ deps_/home/maddocks/USB-GPIO/hybrid-usb/git/skel-wrking-adc-bulk/usb-skeleton.o 
   include/linux/atomic/atomic-long.h \
   include/linux/atomic/atomic-instrumented.h \
   include/linux/instrumented.h \
+  include/linux/kmsan-checks.h \
+    $(wildcard include/config/KMSAN) \
   include/asm-generic/bitops/instrumented-atomic.h \
   include/asm-generic/bitops/lock.h \
   include/asm-generic/bitops/instrumented-lock.h \
@@ -195,7 +196,6 @@ deps_/home/maddocks/USB-GPIO/hybrid-usb/git/skel-wrking-adc-bulk/usb-skeleton.o 
     $(wildcard include/config/LOCKDEP) \
     $(wildcard include/config/LOCK_STAT) \
   include/linux/once_lite.h \
-  include/linux/dynamic_debug.h \
   include/linux/static_call_types.h \
     $(wildcard include/config/HAVE_STATIC_CALL) \
     $(wildcard include/config/HAVE_STATIC_CALL_INLINE) \
@@ -207,28 +207,30 @@ deps_/home/maddocks/USB-GPIO/hybrid-usb/git/skel-wrking-adc-bulk/usb-skeleton.o 
     $(wildcard include/config/DEBUG_OBJECTS) \
     $(wildcard include/config/FAILSLAB) \
     $(wildcard include/config/MEMCG_KMEM) \
-    $(wildcard include/config/KASAN) \
+    $(wildcard include/config/KFENCE) \
     $(wildcard include/config/SLAB) \
     $(wildcard include/config/SLUB) \
     $(wildcard include/config/SLOB) \
     $(wildcard include/config/ZONE_DMA) \
-    $(wildcard include/config/NUMA) \
   include/linux/gfp.h \
     $(wildcard include/config/HIGHMEM) \
     $(wildcard include/config/ZONE_DMA32) \
     $(wildcard include/config/ZONE_DEVICE) \
+    $(wildcard include/config/NUMA) \
     $(wildcard include/config/PM_SLEEP) \
     $(wildcard include/config/CONTIG_ALLOC) \
     $(wildcard include/config/CMA) \
   include/linux/gfp_types.h \
     $(wildcard include/config/KASAN_HW_TAGS) \
   include/linux/mmzone.h \
-    $(wildcard include/config/FORCE_MAX_ZONEORDER) \
+    $(wildcard include/config/ARCH_FORCE_MAX_ORDER) \
     $(wildcard include/config/MEMORY_ISOLATION) \
     $(wildcard include/config/ZSMALLOC) \
     $(wildcard include/config/SWAP) \
     $(wildcard include/config/NUMA_BALANCING) \
     $(wildcard include/config/TRANSPARENT_HUGEPAGE) \
+    $(wildcard include/config/LRU_GEN) \
+    $(wildcard include/config/LRU_GEN_STATS) \
     $(wildcard include/config/MEMCG) \
     $(wildcard include/config/SPARSEMEM) \
     $(wildcard include/config/MEMORY_HOTPLUG) \
@@ -283,6 +285,7 @@ deps_/home/maddocks/USB-GPIO/hybrid-usb/git/skel-wrking-adc-bulk/usb-skeleton.o 
   arch/arm64/include/asm/memory.h \
     $(wildcard include/config/ARM64_VA_BITS) \
     $(wildcard include/config/KASAN_SHADOW_OFFSET) \
+    $(wildcard include/config/KASAN) \
     $(wildcard include/config/VMAP_STACK) \
     $(wildcard include/config/ARM64_4K_PAGES) \
     $(wildcard include/config/DEBUG_VIRTUAL) \
@@ -293,6 +296,7 @@ deps_/home/maddocks/USB-GPIO/hybrid-usb/git/skel-wrking-adc-bulk/usb-skeleton.o 
     $(wildcard include/config/ARM64_PAGE_SHIFT) \
   include/linux/mmdebug.h \
     $(wildcard include/config/DEBUG_VM) \
+    $(wildcard include/config/DEBUG_VM_IRQSOFF) \
     $(wildcard include/config/DEBUG_VM_PGFLAGS) \
   include/asm-generic/memory_model.h \
   include/linux/pfn.h \
@@ -347,9 +351,10 @@ deps_/home/maddocks/USB-GPIO/hybrid-usb/git/skel-wrking-adc-bulk/usb-skeleton.o 
   include/linux/smp.h \
     $(wildcard include/config/UP_LATE_INIT) \
   include/linux/cpumask.h \
-    $(wildcard include/config/CPUMASK_OFFSTACK) \
+    $(wildcard include/config/FORCE_NR_CPUS) \
     $(wildcard include/config/HOTPLUG_CPU) \
     $(wildcard include/config/DEBUG_PER_CPU_MAPS) \
+    $(wildcard include/config/CPUMASK_OFFSTACK) \
   include/linux/bitmap.h \
   include/linux/find.h \
   include/linux/string.h \
@@ -523,6 +528,10 @@ deps_/home/maddocks/USB-GPIO/hybrid-usb/git/skel-wrking-adc-bulk/usb-skeleton.o 
   include/linux/context_tracking_irq.h \
     $(wildcard include/config/CONTEXT_TRACKING_IDLE) \
   include/linux/rcutree.h \
+  include/linux/maple_tree.h \
+    $(wildcard include/config/MAPLE_RCU_DISABLED) \
+    $(wildcard include/config/DEBUG_MAPLE_TREE_VERBOSE) \
+    $(wildcard include/config/DEBUG_MAPLE_TREE) \
   include/linux/rwsem.h \
     $(wildcard include/config/RWSEM_SPIN_ON_OWNER) \
     $(wildcard include/config/DEBUG_RWSEMS) \
@@ -609,6 +618,7 @@ deps_/home/maddocks/USB-GPIO/hybrid-usb/git/skel-wrking-adc-bulk/usb-skeleton.o 
     $(wildcard include/config/MODULES_TREE_LOOKUP) \
     $(wildcard include/config/LIVEPATCH) \
     $(wildcard include/config/STACKTRACE_BUILD_ID) \
+    $(wildcard include/config/ARCH_USES_CFI_TRAPS) \
     $(wildcard include/config/MODULE_SIG) \
     $(wildcard include/config/ARCH_WANTS_MODULES_DATA_IN_VMALLOC) \
     $(wildcard include/config/KALLSYMS) \
@@ -647,6 +657,7 @@ deps_/home/maddocks/USB-GPIO/hybrid-usb/git/skel-wrking-adc-bulk/usb-skeleton.o 
     $(wildcard include/config/PAGE_OWNER) \
     $(wildcard include/config/EVENTFD) \
     $(wildcard include/config/CPU_SUP_INTEL) \
+    $(wildcard include/config/TASK_DELAY_ACCT) \
     $(wildcard include/config/STACKPROTECTOR) \
     $(wildcard include/config/ARCH_HAS_SCALED_CPUTIME) \
     $(wildcard include/config/VIRT_CPU_ACCOUNTING_GEN) \
@@ -666,7 +677,6 @@ deps_/home/maddocks/USB-GPIO/hybrid-usb/git/skel-wrking-adc-bulk/usb-skeleton.o 
     $(wildcard include/config/FUTEX) \
     $(wildcard include/config/PERF_EVENTS) \
     $(wildcard include/config/RSEQ) \
-    $(wildcard include/config/TASK_DELAY_ACCT) \
     $(wildcard include/config/FAULT_INJECTION) \
     $(wildcard include/config/LATENCYTOP) \
     $(wildcard include/config/FUNCTION_GRAPH_TRACER) \
@@ -706,6 +716,7 @@ deps_/home/maddocks/USB-GPIO/hybrid-usb/git/skel-wrking-adc-bulk/usb-skeleton.o 
   include/uapi/asm-generic/shmbuf.h \
   arch/arm64/include/asm/shmparam.h \
   include/asm-generic/shmparam.h \
+  include/linux/kmsan_types.h \
   include/linux/plist.h \
     $(wildcard include/config/DEBUG_PLIST) \
   include/linux/hrtimer.h \
@@ -910,9 +921,6 @@ deps_/home/maddocks/USB-GPIO/hybrid-usb/git/skel-wrking-adc-bulk/usb-skeleton.o 
   include/linux/error-injection.h \
   include/asm-generic/error-injection.h \
   include/linux/tracepoint-defs.h \
-  include/linux/cfi.h \
-    $(wildcard include/config/CFI_CLANG_SHADOW) \
-    $(wildcard include/config/X86_KERNEL_IBT) \
   arch/arm64/include/asm/module.h \
     $(wildcard include/config/ARM64_MODULE_PLTS) \
     $(wildcard include/config/DYNAMIC_FTRACE) \
@@ -969,6 +977,7 @@ deps_/home/maddocks/USB-GPIO/hybrid-usb/git/skel-wrking-adc-bulk/usb-skeleton.o 
   arch/arm64/include/asm/io.h \
   include/linux/pgtable.h \
     $(wildcard include/config/HIGHPTE) \
+    $(wildcard include/config/ARCH_HAS_NONLEAF_PMD_YOUNG) \
     $(wildcard include/config/GUP_GET_PTE_LOW_HIGH) \
     $(wildcard include/config/HAVE_ARCH_TRANSPARENT_HUGEPAGE_PUD) \
     $(wildcard include/config/HAVE_ARCH_SOFT_DIRTY) \
@@ -1058,6 +1067,6 @@ deps_/home/maddocks/USB-GPIO/hybrid-usb/git/skel-wrking-adc-bulk/usb-skeleton.o 
   include/linux/pm_wakeup.h \
   include/linux/pm_runtime.h \
 
-/home/maddocks/USB-GPIO/hybrid-usb/git/skel-wrking-adc-bulk/usb-skeleton.o: $(deps_/home/maddocks/USB-GPIO/hybrid-usb/git/skel-wrking-adc-bulk/usb-skeleton.o)
+/home/maddocks/USB-GPIO/hybrid/skel-wrking-adc-bulk/usb-skeleton.o: $(deps_/home/maddocks/USB-GPIO/hybrid/skel-wrking-adc-bulk/usb-skeleton.o)
 
-$(deps_/home/maddocks/USB-GPIO/hybrid-usb/git/skel-wrking-adc-bulk/usb-skeleton.o):
+$(deps_/home/maddocks/USB-GPIO/hybrid/skel-wrking-adc-bulk/usb-skeleton.o):

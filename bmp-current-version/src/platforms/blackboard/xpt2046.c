@@ -60,7 +60,7 @@ void tscson(void) {
 void tscsoff(void) {
     TS_CS_IDLE;
     ST_CS_ACTIVE;
-    gpio_clear(GPIOB, GPIO12);
+    gpio_clear(GPIOA, GPIO15);
 }
 
 void throwaway(uint8_t command) {
@@ -69,11 +69,11 @@ spi_xfer(TS_SPI, command);
 
 uint16_t ts_get_data16(uint8_t command) {
     tscson();
-    spi_set_baudrate_prescaler(SPI2, SPI_CR1_BR_FPCLK_DIV_16);
+    spi_set_baudrate_prescaler(SPI3, SPI_CR1_BR_FPCLK_DIV_16);
     spi_xfer(TS_SPI, command);
     uint16_t res1 = spi_xfer(TS_SPI, 0x00);
     uint16_t res2 = spi_xfer(TS_SPI, 0x00);
-    spi_set_baudrate_prescaler(SPI2, SPI_CR1_BR_FPCLK_DIV_2);
+    spi_set_baudrate_prescaler(SPI3, SPI_CR1_BR_FPCLK_DIV_2);
     tscsoff();
     ST_CS_ACTIVE;
     return ((res1 << 8) | (res2 && 0xFF)) >> 4;

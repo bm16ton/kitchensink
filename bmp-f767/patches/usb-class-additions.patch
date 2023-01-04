@@ -1,0 +1,25 @@
+From 2d96839d852606de28c3ea5b0e3dff585e823624 Mon Sep 17 00:00:00 2001
+From: Eric Schikschneit <eric.schikschneit@novatechautomation.com>
+Date: Tue, 12 Jul 2022 12:53:35 -0500
+Subject: [PATCH] Add USB CLASS definitions
+
+Add definitions to support APPLICATION_SPECIFIC and INTERFACE classes.
+
+Signed-off-by: Eric Schikschneit <eric.schikschneit@novatechautomation.com>
+---
+ include/libopencm3/usb/usbstd.h | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/include/libopencm3/usb/usbstd.h b/include/libopencm3/usb/usbstd.h
+index 33bdd8b5b2..4edbd69ea3 100644
+--- a/include/libopencm3/usb/usbstd.h
++++ b/include/libopencm3/usb/usbstd.h
+@@ -62,6 +62,8 @@ struct usb_setup_data {
+ } __attribute__((packed));
+ 
+ /* Class Definition */
++#define USB_CLASS_PER_INTERFACE			0x00
++#define USB_CLASS_APPLICATION_SPECIFIC		0xFE
+ #define USB_CLASS_VENDOR			0xFF
+ 
+ /* bmRequestType bit definitions */

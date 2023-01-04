@@ -61,7 +61,7 @@ static const struct usb_endpoint_descriptor gdb_comm_endp = {
 	.bEndpointAddress = (CDCACM_GDB_ENDPOINT + 1) | USB_REQ_TYPE_IN,
 	.bmAttributes = USB_ENDPOINT_ATTR_INTERRUPT,
 	.wMaxPacketSize = 16,
-	.bInterval = 255,
+	.bInterval = 11,
 };
 
 static const struct usb_endpoint_descriptor gdb_data_endp[] = {
@@ -171,7 +171,7 @@ static const struct usb_endpoint_descriptor uart_comm_endp = {
 	.bEndpointAddress = (CDCACM_UART_ENDPOINT + 1) | USB_REQ_TYPE_IN,
 	.bmAttributes = USB_ENDPOINT_ATTR_INTERRUPT,
 	.wMaxPacketSize = 16,
-	.bInterval = 255,
+	.bInterval = 1,
 };
 
 static const struct usb_endpoint_descriptor uart_data_endp[] = {
@@ -180,7 +180,7 @@ static const struct usb_endpoint_descriptor uart_data_endp[] = {
 		.bDescriptorType = USB_DT_ENDPOINT,
 		.bEndpointAddress = CDCACM_UART_ENDPOINT, //2
 		.bmAttributes = USB_ENDPOINT_ATTR_BULK,
-		.wMaxPacketSize = CDCACM_PACKET_SIZE / 2,
+		.wMaxPacketSize = CDCACM_PACKET_SIZE,
 		.bInterval = 1,
 	},
 	{

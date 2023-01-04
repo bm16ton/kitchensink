@@ -25,14 +25,19 @@
 #ifndef STLINKV3
 #include "usb_descriptors.h"
 #endif
+#ifndef F103
 #include "usb_descriptors2.h"
 #include "usb_descriptors3.h"
+#endif
 #ifdef STLINKV3
 #include "stlinkv3.h"
 #endif
 #ifdef F103
 //#include "usb_descriptors3.h"
-#include "usb_descriptors4.h"
+//#include "usb_descriptors4.h"
+#include "usb_descriptors2.h"
+#else
+#include "usb_descriptors3.h"
 #endif
 #include "usb_serial.h"
 
@@ -48,12 +53,12 @@
 #include "serialno.h"
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/timer.h>
-#include <libopencm3/usb/dwc/otg_fs.h>
+#include <libopencm3/usb/dwc/otg_hs.h>
 #include <libopencm3/usb/dwc/otg_common.h>
 #include <libopencm3/usb/usbd.h>
 #include <libopencm3/cm3/scb.h>
 #include "stm32_slcan.h"
-#include "usb_descriptors3.h"
+//#include "usb_descriptors3.h"
 #include "usb_serial2.h"
 
 usbd_device *usbdev = NULL;
@@ -76,106 +81,49 @@ void delay_setup(void)
 void blackmagic_usb_init(int altusb)
 {
 	read_serial_number();
-#ifdef F103
-	rcc_periph_clock_enable(RCC_GPIOA);
 
-	/* lower hotplug and leave enough time for the host to notice */
-	gpio_set_mode(GPIOA, GPIO_MODE_OUTPUT_2_MHZ, GPIO_CNF_OUTPUT_PUSHPULL,
-		      GPIO11 | GPIO12);
-	gpio_clear(GPIOA, GPIO11 | GPIO12);
-	delay_setup();
-#endif
     if (altusb == 0) {
     read_serial_number();
-#ifdef STLINKV3
-	usbdev = usbd_init(&USB_DRIVER, &dev_desc2, &config2, usb_strings2, sizeof(usb_strings2) / sizeof(char *),
-		usbd_control_buffer, sizeof(usbd_control_buffer));
-#else
+
 	usbdev = usbd_init(&USB_DRIVER, &dev_desc, &config, usb_strings, sizeof(usb_strings) / sizeof(char *),
 		usbd_control_buffer, sizeof(usbd_control_buffer));
-#endif
-//    OTG_FS_GCCFG |= OTG_GCCFG_NOVBUSSENS;
-#ifndef STLINKV3
+
 	usbd_register_set_config_callback(usbdev, usb_serial_set_config);
-#endif
 //	usbd_register_set_config_callback(usbdev, usb_set_config);
 //    usbd_register_set_config_callback(usbdev, gpio_set_config);
 //    usbd_register_set_config_callback(usbdev, usbadc_set_config);
-#ifdef BLACKPILLV2
     usbd_register_set_config_callback(usbdev, dfu_set_config);
-#endif
-#ifdef GREENPILL
-    usbd_register_set_config_callback(usbdev, dfu_set_config);
-#endif
-#ifdef STLINKV3
-    usbd_register_set_config_callback(usbdev, cdcacm_set_config);
-#endif
+
 	delay_setup();
 	nvic_set_priority(USB_IRQ, IRQ_PRI_USB);
 	nvic_enable_irq(USB_IRQ);
 	} if (altusb == 1) { 
 	read_serial_number();
-#ifdef BLACKPILLV2
-	usbdev = usbd_init(&otgfs_usb_driver, &dev2, &config2,
-//    usbd_dev = usbd_init(&stm32f107_usb_driver, &dev, &config,
-			usb2_strings, sizeof(usb2_strings)/sizeof(char *),
-			usbd_control_buffer, sizeof(usbd_control_buffer));
-	OTG_FS_GCCFG |= OTG_GCCFG_NOVBUSSENS;
-//    OTG_FS_GUSBCFG |= OTG_GUSBCFG_FDMOD | OTG_GUSBCFG_TRDT_MASK;
-//	OTG_FS_GCCFG |= OTG_GCCFG_NOVBUSSENS | OTG_GCCFG_PWRDWN;
-//	OTG_FS_GCCFG &= ~(OTG_GCCFG_VBUSBSEN | OTG_GCCFG_VBUSASEN);
-//	usbd_register_set_config_callback(usbdev, usb_set_config);
-	usbd_register_set_config_callback(usbdev, usb_set_config);
-	usbd_register_set_config_callback(usbdev, gpio_set_config);
-	usbd_register_set_config_callback(usbdev, usbadc_set_config);
-    usbd_register_set_config_callback(usbdev, dfu_set_config2);
-	delay_setup();
-	nvic_set_priority(USB_IRQ, IRQ_PRI_USB);
-	nvic_enable_irq(USB_IRQ);
-#endif
-#ifdef GREENPILL
-	usbdev = usbd_init(&otgfs_usb_driver, &dev2, &config2,
-//    usbd_dev = usbd_init(&stm32f107_usb_driver, &dev, &config,
-			usb2_strings, sizeof(usb2_strings)/sizeof(char *),
-			usbd_control_buffer, sizeof(usbd_control_buffer));
-	OTG_FS_GCCFG |= OTG_GCCFG_NOVBUSSENS;
-//    OTG_FS_GUSBCFG |= OTG_GUSBCFG_FDMOD | OTG_GUSBCFG_TRDT_MASK;
-//	OTG_FS_GCCFG |= OTG_GCCFG_NOVBUSSENS | OTG_GCCFG_PWRDWN;
-//	OTG_FS_GCCFG &= ~(OTG_GCCFG_VBUSBSEN | OTG_GCCFG_VBUSASEN);
-//	usbd_register_set_config_callback(usbdev, usb_set_config);
-	usbd_register_set_config_callback(usbdev, usb_set_config);
-//	usbd_register_set_config_callback(usbdev, gpio_set_config);
-	usbd_register_set_config_callback(usbdev, usbadc_set_config);
-    usbd_register_set_config_callback(usbdev, dfu_set_config2);
-	delay_setup();
-	nvic_set_priority(USB_IRQ, IRQ_PRI_USB);
-	nvic_enable_irq(USB_IRQ);
-#endif
-#ifdef F103
+
 	usbdev = usbd_init(&USB_DRIVER, &dev2, &config2,
 //    usbd_dev = usbd_init(&stm32f107_usb_driver, &dev, &config,
-	usb2_strings, sizeof(usb2_strings)/sizeof(char *),
-	usbd_control_buffer, sizeof(usbd_control_buffer));
+			usb2_strings, sizeof(usb2_strings)/sizeof(char *),
+			usbd_control_buffer, sizeof(usbd_control_buffer));
+//	OTG_FS_GCCFG |= OTG_GCCFG_NOVBUSSENS;
+//    OTG_FS_GUSBCFG |= OTG_GUSBCFG_FDMOD | OTG_GUSBCFG_TRDT_MASK;
+//	OTG_FS_GCCFG |= OTG_GCCFG_NOVBUSSENS | OTG_GCCFG_PWRDWN;
+//	OTG_FS_GCCFG &= ~(OTG_GCCFG_VBUSBSEN | OTG_GCCFG_VBUSASEN);
+//	usbd_register_set_config_callback(usbdev, usb_set_config);
 	usbd_register_set_config_callback(usbdev, usb_set_config);
 	usbd_register_set_config_callback(usbdev, gpio_set_config);
 	usbd_register_set_config_callback(usbdev, usbadc_set_config);
+    usbd_register_set_config_callback(usbdev, dfu_set_config2);
 	delay_setup();
-/*	
-	usbdev = usbd_init(&st_usbfs_v1_usb_driver, &dev3, &config3, usb_strings3, 3, usbd_control_buffer, sizeof(usbd_control_buffer));
-  usbd_register_set_config_callback(usbdev, stlink_set_config);
-	delay_setup();
-	stlink_run();
-	*/
 	nvic_set_priority(USB_IRQ, IRQ_PRI_USB);
 	nvic_enable_irq(USB_IRQ);
-#endif
+
     } if (altusb == 2) { 
-   #ifdef BLACKPILLV2
-	usbdev = usbd_init(&otgfs_usb_driver, &dev_desc3, &config3,
+
+	usbdev = usbd_init(&USB_DRIVER, &dev_desc3, &config3,
 //    usbd_dev = usbd_init(&stm32f107_usb_driver, &dev, &config,
 			usb_strings3, sizeof(usb_strings3)/sizeof(char *),
 			usbd_control_buffer, sizeof(usbd_control_buffer));
-	OTG_FS_GCCFG |= OTG_GCCFG_NOVBUSSENS;
+    //	OTG_FS_GCCFG |= OTG_GCCFG_NOVBUSSENS;
 //    OTG_FS_GUSBCFG |= OTG_GUSBCFG_FDMOD | OTG_GUSBCFG_TRDT_MASK;
 //	OTG_FS_GCCFG |= OTG_GCCFG_NOVBUSSENS | OTG_GCCFG_PWRDWN;
 //	OTG_FS_GCCFG &= ~(OTG_GCCFG_VBUSBSEN | OTG_GCCFG_VBUSASEN);
@@ -186,7 +134,7 @@ void blackmagic_usb_init(int altusb)
 	delay_setup();
 	nvic_set_priority(USB_IRQ, IRQ_PRI_USB);
 	nvic_enable_irq(USB_IRQ);
-#endif
+
     }
 }
 

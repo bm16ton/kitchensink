@@ -71,6 +71,35 @@ struct usb_wmagic {
 static struct usb_driver wmagic_driver;
 static void wmagic_draw_down(struct usb_wmagic *dev);
 
+static ssize_t humanreadable_store(struct device *dev,
+				   struct device_attribute *attr,
+				   const char *buf, size_t count)
+{
+    struct usb_wmagic *data = dev_get_drvdata(dev);
+    u8 value;
+	u8 ret2;
+	ret2 = kstrtou8(buf, 10, &value);
+    usb_control_msg(data->udev,
+                   usb_sndctrlpipe(data->udev, 0),
+                   249, USB_TYPE_VENDOR | USB_DIR_OUT,
+                   value, value,
+                   NULL, 0,
+                   1000);
+
+    return count;
+}
+static DEVICE_ATTR_WO(humanreadable);
+/*
+static struct attribute *wmagic_attrs[] = {
+	&dev_attr_humanreadable.attr,
+    NULL
+};
+
+ATTRIBUTE_GROUPS(seesawadc);
+*/
+
+
+
 static void wmagic_delete(struct kref *kref)
 {
 	struct usb_wmagic *dev = to_wmagic_dev(kref);
@@ -508,6 +537,7 @@ static void remove_sysfs_attrs(struct usb_interface *interface)
 {
 
 			device_remove_file(&interface->dev, &dev_attr_loop);
+			device_remove_file(&interface->dev, &dev_attr_humanreadable);
 
 }
 
@@ -564,6 +594,11 @@ static int wmagic_probe(struct usb_interface *interface,
 		 "USB WhiteMagic bulkout endpoint- %d",
 		 dev->bulk_out_endpointAddr);
   retval = device_create_file(&interface->dev, &dev_attr_loop);
+   if (retval) {
+     goto error_create_file;
+  }  
+  
+  retval = device_create_file(&interface->dev, &dev_attr_humanreadable);
    if (retval) {
      goto error_create_file;
   }  

@@ -1,5 +1,5 @@
 #ifndef USB_DESCRIPTORS3_H
-#define USB_DESCRIPTOR23_H
+#define USB_DESCRIPTORS3_H
 
 #include <libopencm3/usb/usbd.h>
 #include <libopencm3/usb/cdc.h>

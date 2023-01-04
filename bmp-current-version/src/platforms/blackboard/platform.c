@@ -67,7 +67,7 @@
 #include "ILI9486_Defines.h"
 #include "fonts/font_ubuntu_48.h"
 #include <libopencm3/stm32/usart.h>
-
+#include <libopencm3/stm32/timer.h>
 #include "seesawneo.h"
 #include "drvrspi_flash.h"
 
@@ -75,7 +75,8 @@
 //#include "include/nrf24l01_hw.h"
 //#include "include/nrf24l01.h"
 
-
+static void ulpi_pins(uint32_t gpioport, uint16_t gpiopins);
+void gpio2_setup(void);
 #define IRQ_TYPE_NONE		0
 #define IRQ_TYPE_EDGE_RISING	0x00000001
 #define IRQ_TYPE_EDGE_FALLING	0x00000002
@@ -85,12 +86,12 @@
 
 #define I2C_MEMORY_ADDR 0x49
 
-static void i2c_setup2(void);
+//static void i2c_setup2(void);
 void adcboot(void);
 void platform_request_boot2(void);
 void platform_request_boot3(void);
 int usbmode;
-void neopixel_init(void);
+//void neopixel_init(void);
 void adc_init(void);
 uint8_t *i2ctx[256];
 //void nrf_dump_regs(nrf_regs *r);
@@ -176,22 +177,22 @@ void platform_init(void)
 			GPIO_PUPD_NONE, GPIO6);
 	/* Enable peripherals */
     SCB_VTOR = (uint32_t) 0x08000000;
-	rcc_periph_clock_enable(RCC_OTGFS);
+//	rcc_periph_clock_enable(RCC_OTGFS);
 	rcc_periph_clock_enable(RCC_CRC);
 	rcc_periph_clock_enable(RCC_USART1);
-//    rcc_periph_clock_enable(RCC_GPIOA);
-	gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE,
-			GPIO11 | GPIO12);
-	gpio_set_af(GPIOA, GPIO_AF10, GPIO11 | GPIO12);
-
+ //   rcc_periph_clock_enable(RCC_GPIOA);
+//	gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE,
+//			GPIO11 | GPIO12);
+//	gpio_set_af(GPIOA, GPIO_AF10, GPIO11 | GPIO12);
+    gpio2_setup();
     usbmode = 1;
 
-	dma2_setup();
+//	dma2_setup();
 	usart_setup();
     i2c_init();
     i2c_dma_start();
-//	i2c_setup2();
-    i2c2_init();
+    //	i2c_setup2();
+    i2c3_init();
     systime_setup(168000);
     
 	usbgpio_init();
@@ -203,7 +204,7 @@ void platform_init(void)
  //   dma2_setup();
     adc_start();
 //    neopixel_init();
-    seesawneoint(24);
+   seesawneoint(24);
     clearseesaw(24);
     rcc_periph_clock_enable(RCC_DMA1);
     tftdma();
@@ -224,12 +225,13 @@ void platform_init(void)
 	st_draw_rectangle(385, 155, 80, 25, ILI9486_RED);
 	st_fill_rect(385, 155, 80, 25, ILI9486_RED);
 	st_draw_string(385, 155, "Ext FW", ST_COLOR_YELLOW, &font_fixedsys_mono_24);
-	OTG_FS_GCCFG |= OTG_GCCFG_NOVBUSSENS | OTG_GCCFG_PWRDWN;
-	OTG_FS_GCCFG &= ~(OTG_GCCFG_VBUSBSEN | OTG_GCCFG_VBUSASEN);
+//	OTG_FS_GCCFG |= OTG_GCCFG_NOVBUSSENS | OTG_GCCFG_PWRDWN;
+//	OTG_FS_GCCFG &= ~(OTG_GCCFG_VBUSBSEN | OTG_GCCFG_VBUSASEN);
     tsirq_pin_init();
-
+/*
  	OTG_FS_GCCFG |= OTG_GCCFG_NOVBUSSENS | OTG_GCCFG_PWRDWN;
 	OTG_FS_GCCFG &= ~(OTG_GCCFG_VBUSBSEN | OTG_GCCFG_VBUSASEN);
+	*/
 	printf("Booted BMP\n");
 	neoup(0x18, 0xa, 0xff, 0xc);
     neodown(0x18, 0x0, 0x0, 0x0);
@@ -237,6 +239,7 @@ void platform_init(void)
     sendi2ctest();
     delay(200);
     neotimodd();
+    
 //	return;
 	} else if ((magic[0] == BOOTMAGIC6) && (magic[1] == BOOTMAGIC7)) 
 	{
@@ -249,13 +252,13 @@ void platform_init(void)
     bootjump();
     
   ////////////////////////////////// UNUSED ///////////////////////////////////////////  
-	rcc_periph_clock_enable(RCC_OTGFS);
+//	rcc_periph_clock_enable(RCC_OTGFS);
 	rcc_periph_clock_enable(RCC_CRC);
 	rcc_periph_clock_enable(RCC_USART1);
     usbmode = 3;
     usart_setup();
-	gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO11 | GPIO12);
-	gpio_set_af(GPIOA, GPIO_AF10, GPIO11 | GPIO12);
+//	gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO11 | GPIO12);
+//n	gpio_set_af(GPIOA, GPIO_AF10, GPIO11 | GPIO12);
 	#define CAN1_PORT GPIOD
     #define CAN1_PINS (GPIO0 | GPIO1)
     #define CAN1_AF 9
@@ -270,10 +273,12 @@ void platform_init(void)
  	blackmagic_usb_init(2);
  	extern void slcan_init();
     slcan_init();
-	i2c_dma_start();
-	i2c_setup2();    // disable before reusing this section
-	neopixel_init();   // disable before reusing this section
-    i2c2_init();
+//	i2c_dma_start();
+    i2c_dma_start();
+    i2c3_init();
+//	i2c_setup2();    // disable before reusing this section
+//	neopixel_init();   // disable before reusing this section
+  //  i2c2_init();
     adc_init();
     seesawneoint(24);
     clearseesaw(24);
@@ -304,9 +309,8 @@ void platform_init(void)
 	st_draw_string(385, 185, "canbus", ST_COLOR_PURPLE, &font_fixedsys_mono_24);
 
     tsirq_pin_init();
+delay(100);
 
-	OTG_FS_GCCFG |= OTG_GCCFG_NOVBUSSENS | OTG_GCCFG_PWRDWN;
-	OTG_FS_GCCFG &= ~(OTG_GCCFG_VBUSBSEN | OTG_GCCFG_VBUSASEN);
 	printf("Booted BMP\n");
 
     neoup(0x18, 0xa, 0xff, 0xc);
@@ -324,19 +328,31 @@ void platform_init(void)
 	/* Enable peripherals */
 //	SCB_VTOR = (uint32_t) 0x08000000;
 
-	rcc_periph_clock_enable(RCC_OTGFS);
+//	rcc_periph_clock_enable(RCC_OTGFS);
 	rcc_periph_clock_enable(RCC_GPIOA);
 	rcc_periph_clock_enable(RCC_GPIOB);
 	rcc_periph_clock_enable(RCC_GPIOC);
+	rcc_periph_clock_enable(RCC_GPIOE);
 	rcc_periph_clock_enable(RCC_CRC);
 	rcc_periph_clock_enable(RCC_USART1);
-	
+	gpio_mode_setup(GPIOE, GPIO_MODE_OUTPUT,
+					GPIO_PUPD_NONE, GPIO6);
+	gpio_set(GPIOE, GPIO6);
+	gpio_mode_setup(GPIOE, GPIO_MODE_OUTPUT,
+					GPIO_PUPD_NONE, GPIO10);
+	gpio_set(GPIOE, GPIO10);
+	gpio_mode_setup(GPIOE, GPIO_MODE_OUTPUT,
+					GPIO_PUPD_NONE, GPIO12);
+	gpio_set(GPIOE, GPIO12);
+	gpio_mode_setup(GPIOE, GPIO_MODE_OUTPUT,
+					GPIO_PUPD_NONE, GPIO14);
+	gpio_set(GPIOE, GPIO14);
     usbmode = 2;
     usart_setup();
 	/* Set up USB Pins and alternate function*/
-	gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO11 | GPIO12);
-	gpio_set_af(GPIOA, GPIO_AF10, GPIO11 | GPIO12);
-
+//	gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO11 | GPIO12);
+//	gpio_set_af(GPIOA, GPIO_AF10, GPIO11 | GPIO12);
+gpio2_setup();
 //	GPIOC_OSPEEDR &= ~0xF30;
 //	GPIOC_OSPEEDR |= 0xA20;
 
@@ -354,14 +370,14 @@ void platform_init(void)
 							TDO_PIN | TMS_PIN);
 
     i2c_dma_start();
-    i2c2_init();
+   i2c3_init();
     systime_setup(168000);
     delay(100);
     rcc_periph_clock_enable(RCC_DMA1);
     tftdma();
     delay(100);
     st_init();
-
+    delay(100);
     put_status("just after init");
 
 
@@ -376,7 +392,7 @@ void platform_init(void)
     seesawneoint(24);
     
     clearseesaw(24);
-    delay(422);
+//    delay(422);
 
     delay(100);
     
@@ -403,23 +419,24 @@ void platform_init(void)
 //    spiflash_setup();
     
     tsirq_pin_init();
-
+/*
 	OTG_FS_GCCFG |= OTG_GCCFG_NOVBUSSENS | OTG_GCCFG_PWRDWN;
 	OTG_FS_GCCFG &= ~(OTG_GCCFG_VBUSBSEN | OTG_GCCFG_VBUSASEN);
 	printf("Booted BMP\n");
-
-    neoup(0x18, 0xa, 0xff, 0xc);
+*/
+   neoup(0x18, 0xa, 0xff, 0xc);
 //    neoeveryotherdma(0x00, 0x09, 0x7D, 0x00, 0x7D, 0x09);
 //    neoeveryotherdma(0x00, 0x09, 0x7D, 0x00, 0x7D, 0x09);
 //    neoeveryotherdma(0x00, 0x09, 0x7D, 0x00, 0x7D, 0x09);
     delay(122);
     neodown(0x18, 0x0, 0x50, 0x0);
     delay(100);
-    sendi2ctest();
-    delay(200);
+//    sendi2ctest();
+//    delay(200);
     neotimodd();
     put_status("end of init");
 //    neoeveryother(0xff, 0x0, 0xff, 0x0, 0xff, 0x0);
+
 	}
 }
 
@@ -440,7 +457,20 @@ int _write(int file, char *ptr, int len)
 	return -1;
 }
 
+static void ulpi_pins(uint32_t gpioport, uint16_t gpiopins)
+{
+	gpio_mode_setup(gpioport, GPIO_MODE_AF, GPIO_PUPD_NONE, gpiopins);
+	gpio_set_output_options(gpioport, GPIO_OTYPE_PP, GPIO_OSPEED_100MHZ, gpiopins);
+	gpio_set_af(gpioport, GPIO_AF10, gpiopins);
+}
 
+void gpio2_setup(void) {
+	ulpi_pins(GPIOA, GPIO3 | GPIO5);
+	ulpi_pins(GPIOB, GPIO0 | GPIO1 | GPIO5  | GPIO10 | GPIO11 | GPIO12 | GPIO13);
+	ulpi_pins(GPIOC, GPIO0);
+	ulpi_pins(GPIOC, GPIO2);
+	ulpi_pins(GPIOC, GPIO3);
+}
 
 /*
  * put_status(char *)
@@ -456,7 +486,7 @@ void put_status(char *m)
 
 	printf(m);
 	printf(" Status: ");
-	stmp = SPI_SR(SPI2);
+	stmp = SPI_SR(SPI3);
 	if (stmp & SPI_SR_TXE) {
 		printf("TXE, ");
 	}
@@ -481,7 +511,7 @@ void put_status(char *m)
 	printf("\n");
 }
 
-
+/*
 static void i2c_setup2(void) {
 	rcc_periph_clock_enable(RCC_I2C2);
 	rcc_periph_clock_enable(RCC_GPIOB);
@@ -508,7 +538,7 @@ static void i2c_setup2(void) {
     __asm__("nop");
   }
 }  
-
+*/
 
 static void usart_setup(void)
 {
@@ -549,7 +579,9 @@ void wdg(void) {
 
 void exti1_isr(void)
 {
-
+    
+	timer_disable_irq(TIM2, NVIC_TIM2_IRQ);          
+//	timer_disable_counter(TIM2); 
     volatile int xrw;
     volatile int yrw;
     volatile int xraw;
@@ -565,23 +597,23 @@ void exti1_isr(void)
     xraw = ts_get_x_raw();
 
     yraw = ts_get_y_raw();
-    printf("threshhold =  %d\n", thr);
-    printf("xraw =  %d\n", xraw);
-    printf("yraw =  %d\n", yraw);
-    printf("xrw =  %d\n", xrw);
-    printf("yrw =  %d\n", yrw);
+    printf("threshhold =  %d\r\n", thr);
+    printf("xraw =  %d\r\n", xraw);
+    printf("yraw =  %d\r\n", yraw);
+    printf("xrw =  %d\r\n", xrw);
+    printf("yrw =  %d\r\n", yrw);
 
     
 
-    if ((xraw >= 700 && xraw <= 800 ) && (yraw >= 400 && yraw <= 550)) {
+    if ((xraw >= 900 && xraw <= 1100 ) && (yraw >= 500 && yraw <= 750)) {
 
            magic[0] = BOOTMAGIC2;
            magic[1] = BOOTMAGIC3;
 
 	        GPIOA_MODER |= (0x00000000);
 
-            scb_reset_system();
-            scb_reset_core();
+            scb_reset_system(); // system for regular reset?
+            scb_reset_core();  // core for entering bootloader?
 
             return;
           
@@ -618,7 +650,7 @@ void exti1_isr(void)
   
     exti_reset_request(EXTI1);
     exti_set_trigger(EXTI1, IRQ_TYPE_EDGE_FALLING);
-       
+    neotimodd();   
 }
 
 void platform_nrst_set_val(bool assert) { (void)assert; }
@@ -695,12 +727,15 @@ void platform_request_boot2(void)
 void platform_request_boot(void)
 {
 	uint32_t *magic = (uint32_t *)&_ebss;
+	timer_disable_irq(TIM2, NVIC_TIM2_IRQ);          // Enable the Interrupt in the Interrupt Controller
+	timer_disable_counter(TIM2); 
+	delay(60);
 	st_fill_screen(ILI9486_BLACK);
 	st_draw_string_withbg(90, 110, "DFU FIRMWARE UPGRADE", ST_COLOR_RED, ST_COLOR_WHITE, &font_fixedsys_mono_24);
-	usart_disable(USART_CONSOLE);
-	rcc_periph_clock_disable(RCC_USART1);
-	gpio_clear(GPIOA, GPIO9);
-	GPIOA_MODER |= (0x00000000);
+//	usart_disable(USART_CONSOLE);
+//	rcc_periph_clock_disable(RCC_USART1);
+//	gpio_clear(GPIOA, GPIO9);
+//	GPIOA_MODER |= (0x00000000);
 	delay(122);
 	magic[0] = BOOTMAGIC0;
 	magic[1] = BOOTMAGIC1;
@@ -708,27 +743,27 @@ void platform_request_boot(void)
 }
 
 
-
+/*
 void neopixel_init(void)
 {
 
-	rcc_periph_clock_enable(RCC_SPI1);
+	rcc_periph_clock_enable(RCC_SPI3);
 
 	gpio_mode_setup(GPIOB, GPIO_MODE_AF, GPIO_PUPD_PULLUP, GPIO5);
 	gpio_set_af(GPIOB, GPIO_AF5, GPIO5);
 
 	// use PIN B5 as ws2812 open drain output (1K pullup -> +5V)
 	gpio_set_output_options(GPIOB, GPIO_OTYPE_OD, GPIO_OSPEED_25MHZ, GPIO5);
-	ws2812_init(SPI1);
+	ws2812_init(SPI3);
     delay_ms(15);
 
         if (usbmode == 1) {
-		    ws2812_write_rgb(SPI1, 220, 0, 220);
+		    ws2812_write_rgb(SPI3, 220, 0, 220);
 		}
 		if (usbmode == 2) {
-		    ws2812_write_rgb(SPI1, 0, 220, 220);
+		    ws2812_write_rgb(SPI3, 0, 220, 220);
 		}
 
 		delay_ms(15);
 }
-
+*/

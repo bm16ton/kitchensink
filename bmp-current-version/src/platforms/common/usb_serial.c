@@ -100,7 +100,9 @@ static enum usbd_request_return_codes debug_uart_control_request(usbd_device *de
 	    st_fill_rect(1, 68, 384, 245, 0xD69A);
 	    timer_disable_irq(TIM2, NVIC_TIM2_IRQ);          // Enable the Interrupt in the Interrupt Controller
 	    timer_disable_counter(TIM2); 
+#ifdef BLACKBOARD
 	    clearseesawdma(24);
+#endif
 		usb_serial_set_state(dev, req->wIndex, CDCACM_UART_ENDPOINT);
 #ifdef USBUSART_DTR_PIN
 		gpio_set_val(USBUSART_PORT, USBUSART_DTR_PIN, !(req->wValue & 1U));
@@ -151,7 +153,7 @@ void usb_serial_set_config(usbd_device *dev, uint16_t value)
 	usbd_ep_setup(dev, CDCACM_GDB_ENDPOINT | USB_REQ_TYPE_IN, USB_ENDPOINT_ATTR_BULK, CDCACM_PACKET_SIZE, NULL);
 
 	/* Serial interface */
-	usbd_ep_setup(dev, CDCACM_UART_ENDPOINT, USB_ENDPOINT_ATTR_BULK, CDCACM_PACKET_SIZE / 2, usbuart_usb_out_cb);
+	usbd_ep_setup(dev, CDCACM_UART_ENDPOINT, USB_ENDPOINT_ATTR_BULK, CDCACM_PACKET_SIZE, usbuart_usb_out_cb);
 	usbd_ep_setup(
 		dev, CDCACM_UART_ENDPOINT | USB_REQ_TYPE_IN, USB_ENDPOINT_ATTR_BULK, CDCACM_PACKET_SIZE, usbuart_usb_in_cb);
 

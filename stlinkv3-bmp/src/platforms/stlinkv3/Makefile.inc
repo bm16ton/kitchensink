@@ -15,7 +15,7 @@ LDFLAGS_BOOT := $(LDFLAGS) -mfpu=fpv5-sp-d16 -mfloat-abi=hard \
 ifeq ($(NO_BOOTLOADER), 1)
 APP_START = 0x08000000
 else
-APP_START = 0x08020000
+APP_START = 0x08000000
 endif
 
 LDFLAGS = $(LDFLAGS_BOOT)

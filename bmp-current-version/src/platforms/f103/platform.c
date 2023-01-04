@@ -98,7 +98,8 @@ void platform_init(void)
     rcc_periph_clock_enable(RCC_GPIOA);
     rcc_periph_clock_enable(RCC_GPIOB);
     systime_setup(72000);
-
+	gpio_set_mode(GPIOA, GPIO_MODE_OUTPUT_50_MHZ, GPIO_CNF_OUTPUT_PUSHPULL, GPIO0); 
+	gpio_set(GPIOA, GPIO0);
     st_init();
     i2c_init_f103();
 /*     	

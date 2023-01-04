@@ -77,7 +77,7 @@
 
 /* F072 with st_usbfs_v2_usb_drive drops characters at the 64 byte boundary!*/
 #if !defined(USART_DMA_BUF_SIZE)
-# define USART_DMA_BUF_SIZE 128
+# define USART_DMA_BUF_SIZE 512
 #endif
 #define RX_FIFO_SIZE (USART_DMA_BUF_SIZE)
 #define TX_BUF_SIZE (USART_DMA_BUF_SIZE)
@@ -465,8 +465,10 @@ void usbuart_usb_out_cb(usbd_device *dev, uint8_t ep)
 	}
 
 	/* Enable USBUART TX packet reception if buffer has enough space */
-	if (TX_BUF_SIZE - buf_tx_act_sz >= CDCACM_PACKET_SIZE)
+//	if (TX_BUF_SIZE - buf_tx_act_sz >= CDCACM_PACKET_SIZE) {
+//	;
 		usbd_ep_nak_set(dev, CDCACM_UART_ENDPOINT, 0);
+///    }
 }
 #endif
 

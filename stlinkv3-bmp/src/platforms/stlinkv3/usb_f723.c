@@ -86,6 +86,14 @@ const struct _usbd_driver stm32f723_usb_driver = {
 	.rx_fifo_size = RX_FIFO_SIZE,
 };
 
+
+static void ulpi_pins(uint32_t gpioport, uint16_t gpiopins)
+{
+	gpio_mode_setup(gpioport, GPIO_MODE_AF, GPIO_PUPD_NONE, gpiopins);
+	gpio_set_output_options(gpioport, GPIO_OTYPE_PP, GPIO_OSPEED_100MHZ, gpiopins);
+	gpio_set_af(gpioport, GPIO_AF10, gpiopins);
+	
+}
 /*
  * Initialize the USB device controller hardware of the STM32.
  *
@@ -98,10 +106,33 @@ const struct _usbd_driver stm32f723_usb_driver = {
  * enable the delays before starting to debug other stuff. */
 static usbd_device *stm32f723_usbd_init(void)
 {
+	
+	rcc_periph_clock_enable(RCC_GPIOA);
 	rcc_periph_clock_enable(RCC_GPIOB);
-	gpio_mode_setup(GPIOB, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO14 | GPIO15);
-	gpio_set_output_options(GPIOB, GPIO_OTYPE_PP, GPIO_OSPEED_100MHZ, GPIO14 | GPIO15);
-	gpio_set_af(GPIOB, GPIO_AF12, GPIO14 | GPIO15);
+	rcc_periph_clock_enable(RCC_GPIOC);
+	rcc_periph_clock_enable(RCC_GPIOH);
+	rcc_periph_clock_enable(RCC_OTGHSULPI);
+	rcc_periph_clock_enable(RCC_OTGHS);
+
+	/* ULPI   GPIO
+	 *  D0  -> PA3
+	 *  D1  -> PB0
+	 *  D2  -> PB1
+	 *  D3  -> PB10
+	 *  D4  -> PB11
+	 *  D5  -> PB12
+	 *  D6  -> PB13
+	 *  D7  -> PB5
+	 *  DIR -> PC2
+	 *  STP -> PC0
+	 *  NXT -> PC3
+	 *  CK  -> PA5
+	 */
+	ulpi_pins(GPIOA, GPIO3 | GPIO5);
+	ulpi_pins(GPIOB, GPIO0 | GPIO1 | GPIO5  | GPIO10 | GPIO11 | GPIO12 | GPIO13);
+	ulpi_pins(GPIOC, GPIO0 | GPIO2 | GPIO3);
+	
+
 
 	rcc_periph_clock_enable((enum rcc_periph_clken) RCC_OTGPHYC);
 	rcc_periph_clock_enable(RCC_OTGHSULPI);

@@ -123,6 +123,8 @@
 #define OTG_GUSBCFG_HNPCAP		0x00000200
 #define OTG_GUSBCFG_TRDT_MASK		(0xf << 10)
 #define OTG_GUSBCFG_NPTXRWEN		0x00004000
+#define OTG_GUSBCFG_ULPIEVBUSI  (1 << 21)
+#define OTG_GUSBCFG_ULPIEVBUSD  (1 << 20)
 #define OTG_GUSBCFG_FHMOD		0x20000000
 #define OTG_GUSBCFG_FDMOD		0x40000000
 #define OTG_GUSBCFG_CTXPKT		0x80000000
@@ -274,6 +276,7 @@
 
 /* OTG Device OUT Endpoint Common Interrupt Mask Register (OTG_DOEPMSK) */
 /* Bits 31:10 - Reserved */
+#define OTG_DOEPMSK_BBLERR  (1 << 12)
 #define OTG_DOEPMSK_BOIM	(1 << 9)
 #define OTG_DOEPMSK_OPEM	(1 << 8)
 /* Bit 7 - Reserved */

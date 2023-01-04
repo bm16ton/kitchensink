@@ -3,7 +3,7 @@
 #ifndef XPT2046_H_XYZ
 #define XPT2046_H_XYZ
 
-#define TS_SPI          SPI2
+#define TS_SPI          SPI3
 #define TS_SPI_PORT     GPIOB
 #define TS_MO_PIN       GPIO15
 #define TS_MI_PIN       GPIO14

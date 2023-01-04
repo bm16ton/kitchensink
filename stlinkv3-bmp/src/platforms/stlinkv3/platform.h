@@ -69,7 +69,7 @@ int usbuart_debug_write(const char *buf, size_t len);
 #define TMS_DRIVE_PORT GPIOA
 #define TMS_DRIVE_PIN  GPIO7
 
-#define PLATFORM_HAS_TRACESWO		1
+#define PLATFORM_HAS_TRACESWO		0
 #define NUM_TRACE_PACKETS		(16)
 #define TRACESWO_PROTOCOL		2			/* 1 = Manchester, 2 = NRZ / async */
 
@@ -131,32 +131,32 @@ extern const struct _usbd_driver stm32f723_usb_driver;
 #define IRQ_PRI_CAN_TX			(7 << 4)
 
 /* USART6 is on DMA2 Channel 5 , Rx Stream 1/2, TX Stream 6/7*/
-#define USBUSART USART6
-#define USBUSART_BASE USART6_BASE
+#define USBUSART USART1
+#define USBUSART_BASE USART1_BASE
 
 #define USBUSART_CR1 USART_CR1(USBUSART_BASE)
 #define USBUSART_RDR USART_RDR(USBUSART_BASE)
 #define USBUSART_TDR USART_TDR(USBUSART_BASE)
-#define USBUSART_IRQ NVIC_USART6_IRQ
-#define USBUSART_CLK RCC_USART6
-#define USBUSART_PORT GPIOG
-#define USBUSART_PIN_AF        GPIO_AF8
-#define USBUSART_PORT_CLKEN RCC_GPIOG
-#define USBUSART_TX_PIN GPIO14
-#define USBUSART_RX_PIN GPIO9
-#define USBUSART_ISR usart6_isr
+#define USBUSART_IRQ NVIC_USART1_IRQ
+#define USBUSART_CLK RCC_USART1
+#define USBUSART_PORT GPIOA
+#define USBUSART_PIN_AF        GPIO_AF7
+#define USBUSART_PORT_CLKEN RCC_GPIOA
+#define USBUSART_TX_PIN GPIO9
+#define USBUSART_RX_PIN GPIO10
+#define USBUSART_ISR usart1_isr
 
 #define USBUSART_DMA_BUS DMA2
 #define USBUSART_DMA_CLK RCC_DMA2
-#define USBUSART_DMA_TX_CHAN DMA_STREAM6
-#define USBUSART_DMA_TX_IRQ NVIC_DMA2_STREAM6_IRQ
-#define USBUSART_DMA_TX_ISR(x) dma2_stream6_isr(x)
+#define USBUSART_DMA_TX_CHAN DMA_STREAM7
+#define USBUSART_DMA_TX_IRQ NVIC_DMA2_STREAM7_IRQ
+#define USBUSART_DMA_TX_ISR(x) dma2_stream7_isr(x)
 #define USBUSART_DMA_RX_CHAN DMA_STREAM2
 #define USBUSART_DMA_RX_IRQ NVIC_DMA2_STREAM2_IRQ
 #define USBUSART_DMA_RX_ISR(x) dma2_stream2_isr(x)
 
 /* For STM32F7 DMA trigger source must be specified */
-#define USBUSART_DMA_TRG DMA_SxCR_CHSEL_5
+#define USBUSART_DMA_TRG DMA_SxCR_CHSEL_4
 
 #define UART_PIN_SETUP() do { \
 	rcc_periph_clock_enable(USBUSART_PORT_CLKEN); \
@@ -182,11 +182,11 @@ extern const struct _usbd_driver stm32f723_usb_driver;
 #define SWO_DMA_ISR(x)			dma1_stream0_isr(x)
 
 #define LED_PORT	GPIOA
-#define LED_PIN 	GPIO10
+#define LED_PIN 	GPIO14
 #define LED_PORT_UART	GPIOA
-#define LED_UART	GPIO10
+#define LED_UART	GPIO14
 
-#define LED_IDLE_RUN            GPIO10
+#define LED_IDLE_RUN            GPIO15
 #define SET_RUN_STATE(state)	{gpio_set_val(LED_PORT, LED_IDLE_RUN, state); running_status = (state);}
 #define SET_IDLE_STATE(state)	{gpio_set_val(LED_PORT, LED_IDLE_RUN, !state);}
 #define SET_ERROR_STATE(state)

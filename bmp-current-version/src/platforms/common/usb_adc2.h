@@ -4,8 +4,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "usb.h"
+#include "maxpacket.h"
 
-#define BULK_EP_MAXPACKET 64
 
 void adc2_start(void);
 

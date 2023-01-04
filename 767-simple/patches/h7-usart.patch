@@ -1,0 +1,46 @@
+From dacce25d40d6abdf1429288effd2f8250ba1e313 Mon Sep 17 00:00:00 2001
+From: Matthew Via <via@matthewvia.info>
+Date: Sat, 4 Jun 2022 09:55:17 -0400
+Subject: [PATCH] usart: use rcc helpers for peripheral clock frequency
+
+---
+ lib/stm32/common/usart_common_all.c | 12 +-----------
+ lib/stm32/h7/Makefile               |  2 +-
+ 2 files changed, 2 insertions(+), 12 deletions(-)
+
+diff --git a/lib/stm32/common/usart_common_all.c b/lib/stm32/common/usart_common_all.c
+index e30e2febf8..8e676c07b7 100644
+--- a/lib/stm32/common/usart_common_all.c
++++ b/lib/stm32/common/usart_common_all.c
+@@ -52,17 +52,7 @@ usart_reg_base
+ 
+ void usart_set_baudrate(uint32_t usart, uint32_t baud)
+ {
+-	uint32_t clock = rcc_apb1_frequency;
+-
+-#if defined USART1
+-	if ((usart == USART1)
+-#if defined USART6
+-		|| (usart == USART6)
+-#endif
+-		) {
+-		clock = rcc_apb2_frequency;
+-	}
+-#endif
++	uint32_t clock = rcc_get_usart_clk_freq(usart);
+ 
+ 	/*
+ 	 * Yes it is as simple as that. The reference manual is
+diff --git a/lib/stm32/h7/Makefile b/lib/stm32/h7/Makefile
+index 2c7cbb187c..46d2d03752 100644
+--- a/lib/stm32/h7/Makefile
++++ b/lib/stm32/h7/Makefile
+@@ -48,7 +48,7 @@ OBJS += rcc_common_all.o
+ OBJS += rng_common_v1.o
+ OBJS += spi_common_all.o spi_common_v2.o
+ OBJS += timer_common_all.o
+-OBJS += usart_common_v2.o usart_common_fifos.o
++OBJS += usart_common_all.o usart_common_v2.o usart_common_fifos.o
+ OBJS += quadspi_common_v1.o
+ 
+ VPATH += ../../usb:../:../../cm3:../common

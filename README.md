@@ -1,3 +1,10 @@
+update: Now using ulpi usbhs, usb2adc now can be switched between sending raw (fast) or humanreadable (slow) via sysfs file "humanreadable". Probly more changes I dont remember.
+KNOWN ISSUES SINCE SWITCHING TO USB-HS;
+No more i2c2 or spi2 both had pins required by ulpi.
+Auto usb dfu doesnt work since dfu only works on usb-fs.
+USB-2-SERIAL doesnt work buffers need to be thought out and aligned.
+
+
 updates; switched to ili9486 16bit spi shifter type like the waveshare rpi models. all is good thus far, the f407 actually have 1024k storage not its reported 512k so the onscreen button for canbus now jumps to memory address 512k im currently placing pecan firmware , but have tested very basic patch for arduino to also flash to 512k and that works too. ill place the pecan firmware i edited for 512k offset sumwhere in this source. Also wrote using adafruit seesaw driver for neopixels so i can reclaim spi port and finally use have a purpose for my seesaw (checkout my seesaw linux kernel driver for adc pwm on seesaw) and I dont remember what else its been to long without updating readme.
 not finished switched to ii9341 but the files and most code are still around (coommented) for st7789 sh1106 and ssd1306;
 

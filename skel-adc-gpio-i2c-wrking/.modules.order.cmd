@@ -1,1 +1,1 @@
-cmd_/home/maddocks/USB-GPIO/hybrid-usb/skel-adc-gpio-i2c-wrking/modules.order := {   echo /home/maddocks/USB-GPIO/hybrid-usb/skel-adc-gpio-i2c-wrking/usb-skeleton.ko; :; } | awk '!x[$$0]++' - > /home/maddocks/USB-GPIO/hybrid-usb/skel-adc-gpio-i2c-wrking/modules.order
+cmd_/home/maddocks/USB-GPIO/hybrid/skel-adc-gpio-i2c-wrking/modules.order := {   echo /home/maddocks/USB-GPIO/hybrid/skel-adc-gpio-i2c-wrking/usb-skeleton.ko; :; } | awk '!x[$$0]++' - > /home/maddocks/USB-GPIO/hybrid/skel-adc-gpio-i2c-wrking/modules.order
